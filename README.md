@@ -229,4 +229,4 @@ PHP CS Fixer.
 
 ## License
 
-MIT — see `composer.json`.
+MIT — see [LICENSE](LICENSE).

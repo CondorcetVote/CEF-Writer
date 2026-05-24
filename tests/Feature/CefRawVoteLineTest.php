@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{DuplicateCandidateException, InvalidValueException, InvalidWriterStateException, ReservedCharacterException};
 use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
 use CondorcetVote\CefWriter\VoteLine;
 
@@ -68,43 +68,43 @@ it('locks parameter writing once a raw vote line has been emitted', function ():
 
     $cef->addRawVoteLine('Alice');
     $cef->addParameter(new CandidatesParameter(['Alice']));
-})->throws(CefFormatException::class, 'before any vote');
+})->throws(InvalidWriterStateException::class, 'before any vote');
 
 it('rejects an empty string', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('');
-})->throws(CefFormatException::class, 'empty');
+})->throws(InvalidValueException::class, 'empty');
 
 it('rejects a whitespace-only string', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine("   \t  \n");
-})->throws(CefFormatException::class, 'empty');
+})->throws(InvalidValueException::class, 'empty');
 
 it('rejects a multi-line string (embedded \\n)', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine("Alice > Bob\nCharlie > Dave");
-})->throws(CefFormatException::class, 'single line');
+})->throws(InvalidValueException::class, 'single line');
 
 it('rejects a multi-line string (embedded \\r)', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine("Alice > Bob\rCharlie > Dave");
-})->throws(CefFormatException::class, 'single line');
+})->throws(InvalidValueException::class, 'single line');
 
 it('rejects a line that starts with # (would be a comment line)', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('# a comment, not a vote');
-})->throws(CefFormatException::class);
+})->throws(ReservedCharacterException::class);
 
 it('rejects a line that starts with #/ (would be a parameter line)', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('#/Candidates: A;B');
-})->throws(CefFormatException::class);
+})->throws(ReservedCharacterException::class);
 
 it('still accepts a line that ENDS with an inline comment (#) — only leading # is forbidden', function (): void {
     [$cef, $buffer] = makeStringCef();
@@ -164,46 +164,46 @@ it('rejects a duplicate candidate inside the ranking', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('Alice > Bob > Alice');
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('rejects a duplicate candidate across tied groups', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('Alice = Bob > Charlie = Alice');
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('rejects an empty rank in the middle of the ranking', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('Alice >  > Bob');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a zero quantifier', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('Alice * 0');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a zero weight', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('Alice ^0');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects an empty tag in the tags list', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('tag1, , tag2 || Alice');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a line that ends with a stray pipe (would-be empty ranking after tags)', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('tag1 || ');
-})->throws(CefFormatException::class, 'no ranking');
+})->throws(InvalidWriterStateException::class, 'no ranking');
 
 it('rejects a line that is only an inline comment after tags', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addRawVoteLine('tag1 || # only a comment');
-})->throws(CefFormatException::class, 'no ranking');
+})->throws(InvalidWriterStateException::class, 'no ranking');

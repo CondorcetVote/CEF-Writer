@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{DuplicateCandidateException, InvalidValueException, InvalidWriterStateException, ReservedCharacterException};
 use CondorcetVote\CefWriter\VoteLine;
 
 it('parses a simple ranking', function (): void {
@@ -56,11 +56,11 @@ it('parses ties together with weight, quantifier and tags', function (): void {
 
 it('rejects a duplicate that appears across separate tied groups', function (): void {
     VoteLine::fromString('Alice = Bob > Charlie = Alice');
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('rejects a duplicate within the same tied group', function (): void {
     VoteLine::fromString('Alice = Alice > Bob');
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('parses candidate names that contain spaces', function (): void {
     $line = VoteLine::fromString('Candidate A > Candidate B = Candidate C');
@@ -169,36 +169,36 @@ it('round-trips the spec example "Candidate C > Candidate A = Candidate B ^7 * 8
 
 it('rejects an empty string', function (): void {
     VoteLine::fromString('');
-})->throws(CefFormatException::class, 'empty');
+})->throws(InvalidValueException::class, 'empty');
 
 it('rejects a string with only whitespace', function (): void {
     VoteLine::fromString('   ');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a string with only an inline comment (no ranking)', function (): void {
     VoteLine::fromString('# just a comment');
-})->throws(CefFormatException::class, 'no ranking');
+})->throws(InvalidWriterStateException::class, 'no ranking');
 
 it('rejects a string with only tags and no ranking', function (): void {
     VoteLine::fromString('tag1 || ');
-})->throws(CefFormatException::class, 'no ranking');
+})->throws(InvalidWriterStateException::class, 'no ranking');
 
 it('rejects a candidate that contains a reserved character', function (): void {
     VoteLine::fromString('A > B/C');
-})->throws(CefFormatException::class);
+})->throws(ReservedCharacterException::class);
 
 it('rejects a duplicate candidate', function (): void {
     VoteLine::fromString('A > B > A');
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('rejects an empty rank in the middle of the ranking', function (): void {
     VoteLine::fromString('A >  > B');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a zero quantifier', function (): void {
     VoteLine::fromString('A * 0');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects an empty tag in the tags list', function (): void {
     VoteLine::fromString('tag1, , tag2 || A');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);

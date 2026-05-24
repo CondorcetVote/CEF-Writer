@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CondorcetVote\CefWriter;
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, DuplicateCandidateException, InvalidValueException, InvalidWriterStateException, ReservedCharacterException};
 
 /**
  * A single ballot.
@@ -56,11 +56,11 @@ final class VoteLine
         $this->tags = self::validateTags($tags);
 
         if ($weight !== null && $weight < 1) {
-            throw new CefFormatException('Weight must be a positive integer.');
+            throw new InvalidValueException('Weight must be a positive integer.');
         }
 
         if ($quantifier !== null && $quantifier < 1) {
-            throw new CefFormatException('Quantifier must be a positive integer.');
+            throw new InvalidValueException('Quantifier must be a positive integer.');
         }
 
         if ($inlineComment !== null) {
@@ -145,7 +145,7 @@ final class VoteLine
         $work = trim($line);
 
         if ($work === '') {
-            throw new CefFormatException('Vote line string cannot be empty.');
+            throw new InvalidValueException('Vote line string cannot be empty.');
         }
 
         $inlineComment = null;
@@ -196,15 +196,15 @@ final class VoteLine
         }
 
         if ($weight !== null && $weight < 1) {
-            throw new CefFormatException('Weight must be a positive integer.');
+            throw new InvalidValueException('Weight must be a positive integer.');
         }
 
         if ($quantifier !== null && $quantifier < 1) {
-            throw new CefFormatException('Quantifier must be a positive integer.');
+            throw new InvalidValueException('Quantifier must be a positive integer.');
         }
 
         if ($work === '') {
-            throw new CefFormatException(\sprintf(
+            throw new InvalidWriterStateException(\sprintf(
                 'Vote line "%s" has no ranking.',
                 trim($original),
             ));
@@ -293,7 +293,7 @@ final class VoteLine
 
         foreach ($ranking as $rankIndex => $rank) {
             if (\count($rank) === 0) {
-                throw new CefFormatException(\sprintf('Rank #%d is empty.', $rankIndex + 1));
+                throw new InvalidValueException(\sprintf('Rank #%d is empty.', $rankIndex + 1));
             }
 
             $cleanedRank = [];
@@ -303,7 +303,7 @@ final class VoteLine
                 CefFormat::assertValueIsClean($trimmed, 'Ranked candidate');
 
                 if (isset($seen[$trimmed])) {
-                    throw new CefFormatException(\sprintf(
+                    throw new DuplicateCandidateException(\sprintf(
                         'Candidate "%s" appears more than once in the ranking.',
                         $trimmed,
                     ));
@@ -334,11 +334,11 @@ final class VoteLine
             $trimmed = trim($tag);
 
             if ($trimmed === '') {
-                throw new CefFormatException('Tag cannot be empty.');
+                throw new InvalidValueException('Tag cannot be empty.');
             }
 
             if (str_contains($trimmed, CefFormat::TAGS_SEPARATOR)) {
-                throw new CefFormatException('Tag cannot contain the "||" separator.');
+                throw new ReservedCharacterException('Tag cannot contain the "||" separator.');
             }
 
             CefFormat::assertValueIsClean($trimmed, 'Tag');

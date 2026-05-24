@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use CondorcetVote\CefWriter\CommentLine;
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\InvalidValueException;
 
 it('prefixes the text with "#" and a space when autoFormat is on', function (): void {
     $comment = new CommentLine('hello world');
@@ -33,4 +33,4 @@ it('renders a lone "#" for an empty comment text', function (): void {
 
 it('rejects a multi-line comment text', function (): void {
     new CommentLine("one\ntwo");
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);

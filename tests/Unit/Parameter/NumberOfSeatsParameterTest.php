@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\InvalidValueException;
 use CondorcetVote\CefWriter\Parameter\NumberOfSeatsParameter;
 
 it('emits the integer as its formatted value', function (): void {
@@ -19,8 +19,8 @@ it('accepts one seat', function (): void {
 
 it('rejects zero seats', function (): void {
     new NumberOfSeatsParameter(0);
-})->throws(CefFormatException::class, 'positive');
+})->throws(InvalidValueException::class, 'positive');
 
 it('rejects a negative number of seats', function (): void {
     new NumberOfSeatsParameter(-3);
-})->throws(CefFormatException::class, 'positive');
+})->throws(InvalidValueException::class, 'positive');

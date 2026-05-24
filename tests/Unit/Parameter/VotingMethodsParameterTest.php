@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{InvalidValueException, ReservedCharacterException};
 use CondorcetVote\CefWriter\Parameter\VotingMethodsParameter;
 
 it('joins method names with semicolons', function (): void {
@@ -15,8 +15,8 @@ it('joins method names with semicolons', function (): void {
 
 it('rejects an empty methods list', function (): void {
     new VotingMethodsParameter([]);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a method name with a reserved character', function (): void {
     new VotingMethodsParameter(['Schulze', 'Copeland;Variant']);
-})->throws(CefFormatException::class);
+})->throws(ReservedCharacterException::class);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CondorcetVote\CefWriter;
 
-use CondorcetVote\CefWriter\Exception\{CefFormatException, CefWriteException};
+use CondorcetVote\CefWriter\Exception\{CefFormatException, CefWriteException, InvalidValueException, InvalidWriterStateException, ReservedCharacterException};
 use CondorcetVote\CefWriter\Parameter\ParameterInterface;
 
 /**
@@ -69,7 +69,7 @@ final class Cef
         $hasString = $string !== null;
 
         if ($hasFile === $hasString) {
-            throw new CefFormatException(
+            throw new InvalidWriterStateException(
                 'Exactly one of $file or $string must be provided to the Cef constructor.',
             );
         }
@@ -101,7 +101,7 @@ final class Cef
     public function addParameter(ParameterInterface $parameter): self
     {
         if ($this->voteEmitted) {
-            throw new CefFormatException(
+            throw new InvalidWriterStateException(
                 'Parameters must be written before any vote line.',
             );
         }
@@ -163,17 +163,17 @@ final class Cef
         $cleaned = trim($cleaned);
 
         if ($cleaned === '') {
-            throw new CefFormatException('Raw vote line cannot be empty.');
+            throw new InvalidValueException('Raw vote line cannot be empty.');
         }
 
         if (preg_match('/[\r\n]/', $cleaned) === 1) {
-            throw new CefFormatException(
+            throw new InvalidValueException(
                 'Raw vote line must be a single line; embedded newlines are not allowed.',
             );
         }
 
         if ($cleaned[0] === '#') {
-            throw new CefFormatException(
+            throw new ReservedCharacterException(
                 'Raw vote line cannot start with "#"; that would be a comment or parameter line, not a vote.',
             );
         }

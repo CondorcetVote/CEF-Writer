@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CondorcetVote\CefWriter\Parameter;
 
 use CondorcetVote\CefWriter\CefFormat;
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, DuplicateCandidateException, InvalidValueException};
 
 /**
  * `#/Candidates:` parameter — declares the official list of candidates.
@@ -27,7 +27,7 @@ final class CandidatesParameter implements ParameterInterface
     public function __construct(array $candidates)
     {
         if (\count($candidates) === 0) {
-            throw new CefFormatException('Candidates list cannot be empty.');
+            throw new InvalidValueException('Candidates list cannot be empty.');
         }
 
         $seen = [];
@@ -37,7 +37,7 @@ final class CandidatesParameter implements ParameterInterface
             CefFormat::assertValueIsClean($trimmed, 'Candidate name');
 
             if (isset($seen[$trimmed])) {
-                throw new CefFormatException(\sprintf('Duplicate candidate "%s".', $trimmed));
+                throw new DuplicateCandidateException(\sprintf('Duplicate candidate "%s".', $trimmed));
             }
 
             $seen[$trimmed] = true;

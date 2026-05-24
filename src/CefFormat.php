@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CondorcetVote\CefWriter;
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidUtf8Exception, InvalidValueException, ReservedCharacterException};
 
 /**
  * Internal helpers shared across the writer and the value objects.
@@ -45,7 +45,7 @@ final class CefFormat
     public static function assertValueIsClean(string $value, string $context): void
     {
         if ($value === '') {
-            throw new CefFormatException(\sprintf('%s cannot be empty.', $context));
+            throw new InvalidValueException(\sprintf('%s cannot be empty.', $context));
         }
 
         self::assertNoReservedNorLineBreak($value, $context);
@@ -65,7 +65,7 @@ final class CefFormat
 
         foreach (self::RESERVED_CHARACTERS as $reserved) {
             if (str_contains($value, $reserved)) {
-                throw new CefFormatException(\sprintf(
+                throw new ReservedCharacterException(\sprintf(
                     '%s cannot contain the reserved character "%s".',
                     $context,
                     $reserved,
@@ -98,18 +98,18 @@ final class CefFormat
     private static function assertSafeText(string $value, string $context): void
     {
         if (! mb_check_encoding($value, 'UTF-8')) {
-            throw new CefFormatException(\sprintf(
+            throw new InvalidUtf8Exception(\sprintf(
                 '%s contains an invalid UTF-8 byte sequence.',
                 $context,
             ));
         }
 
         if (preg_match('/[\r\n]/', $value) === 1) {
-            throw new CefFormatException(\sprintf('%s cannot contain a line break.', $context));
+            throw new InvalidValueException(\sprintf('%s cannot contain a line break.', $context));
         }
 
         if (str_contains($value, "\0")) {
-            throw new CefFormatException(\sprintf('%s cannot contain a null byte.', $context));
+            throw new InvalidValueException(\sprintf('%s cannot contain a null byte.', $context));
         }
     }
 }

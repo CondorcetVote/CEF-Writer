@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CondorcetVote\CefWriter\Parameter;
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidValueException};
 
 /**
  * `#/Number of Seats:` parameter — strictly positive integer.
@@ -17,7 +17,7 @@ final class NumberOfSeatsParameter implements ParameterInterface
     public function __construct(public readonly int $seats)
     {
         if ($seats < 1) {
-            throw new CefFormatException('Number of seats must be a positive integer.');
+            throw new InvalidValueException('Number of seats must be a positive integer.');
         }
     }
 

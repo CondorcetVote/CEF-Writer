@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CondorcetVote\CefWriter\Parameter;
 
 use CondorcetVote\CefWriter\CefFormat;
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidValueException};
 
 /**
  * `#/Voting Methods:` parameter — list of method identifiers separated by `;`.
@@ -23,7 +23,7 @@ final class VotingMethodsParameter implements ParameterInterface
     public function __construct(array $methods)
     {
         if (\count($methods) === 0) {
-            throw new CefFormatException('Voting methods list cannot be empty.');
+            throw new InvalidValueException('Voting methods list cannot be empty.');
         }
 
         foreach ($methods as $method) {

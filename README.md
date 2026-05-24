@@ -184,24 +184,27 @@ classes intentionally do not expose one.
 
 ## Errors
 
-Two exception types, each for a different layer:
+Two top-level hierarchies, each for a different layer.
 
-### `CefFormatException`
+### Format & input violations — `CefFormatException`
 
-Thrown for any specification or input violation. The message names the
-offending field and the rule that was broken. Triggers include:
+Base class for every specification or input violation. Catch this one to
+handle *any* format-related failure uniformly; catch a specific subclass
+below to branch on a kind of violation. Each message names the offending
+field and the rule that was broken.
 
-- empty candidate list,
-- duplicate candidate in `#/Candidates:` or within a single ranking,
-- a reserved character (`> = ; , # / * ^`) inside any structured value,
-- a **null byte** (`\0`) inside any value,
-- an **invalid UTF-8** byte sequence inside any value,
-- a line break in a name, tag, comment, or inline comment,
-- a non-positive `weight` / `quantifier`,
-- adding a parameter after a vote has been emitted,
-- malformed input passed to `VoteLine::fromString()` or `Cef::addRawVoteLine()`.
+| Subclass | Thrown for |
+|---|---|
+| `InvalidUtf8Exception`       | Byte sequence that does not decode as valid UTF-8. |
+| `ReservedCharacterException` | One of the spec-reserved characters (`> = ; , # / * ^`), a `:` in a custom parameter name, `\|\|` inside a tag, or a leading `#` on a raw vote line. |
+| `InvalidValueException`      | Empty required string, embedded line break, null byte, non-positive `weight` / `quantifier`, empty `#/Candidates:` or `#/Voting Methods:` list, or empty rank inside a ranking. |
+| `DuplicateCandidateException`| Same candidate label appearing twice in `#/Candidates:` or anywhere inside a ranking (including across tied groups). |
+| `InvalidWriterStateException`| `Cef` constructed with neither a file nor a string target (or with both); parameter added after the first vote; vote-line string parsed without a ranking. |
 
-### `CefWriteException`
+All subclasses extend `CefFormatException`, which itself extends
+`\RuntimeException`.
+
+### I/O failures — `CefWriteException`
 
 Thrown when writing to the underlying target (file or string buffer) fails —
 typically a closed handle, a read-only file, or a full disk. Distinct from

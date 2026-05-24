@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CondorcetVote\CefWriter\Parameter;
 
 use CondorcetVote\CefWriter\CefFormat;
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidValueException, ReservedCharacterException};
 
 /**
  * Free-form parameter for tooling that extends CEF with project-specific keys.
@@ -29,11 +29,11 @@ final class CustomParameter implements ParameterInterface
         $trimmedName = trim($name);
 
         if ($trimmedName === '') {
-            throw new CefFormatException('Custom parameter name cannot be empty.');
+            throw new InvalidValueException('Custom parameter name cannot be empty.');
         }
 
         if (str_contains($trimmedName, ':')) {
-            throw new CefFormatException('Custom parameter name cannot contain ":".');
+            throw new ReservedCharacterException('Custom parameter name cannot contain ":".');
         }
 
         CefFormat::assertValueIsClean($trimmedName, 'Custom parameter name');

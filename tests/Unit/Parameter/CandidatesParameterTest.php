@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{DuplicateCandidateException, InvalidValueException, ReservedCharacterException};
 use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
 
 it('exposes the standard CEF parameter name', function (): void {
@@ -35,20 +35,20 @@ it('preserves UTF-8 candidate names', function (): void {
 
 it('rejects an empty list', function (): void {
     new CandidatesParameter([]);
-})->throws(CefFormatException::class, 'empty');
+})->throws(InvalidValueException::class, 'empty');
 
 it('rejects an empty candidate name', function (): void {
     new CandidatesParameter(['Alice', '   ']);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects duplicate candidates', function (): void {
     new CandidatesParameter(['Alice', 'Bob', 'Alice']);
-})->throws(CefFormatException::class, 'Duplicate');
+})->throws(DuplicateCandidateException::class, 'Duplicate');
 
 it('rejects a candidate containing a reserved character', function (string $reserved): void {
     new CandidatesParameter(['Alice', 'Bob' . $reserved . 'X']);
-})->with(['>', '=', ';', ',', '#', '/', '*', '^'])->throws(CefFormatException::class, 'reserved');
+})->with(['>', '=', ';', ',', '#', '/', '*', '^'])->throws(ReservedCharacterException::class, 'reserved');
 
 it('rejects a candidate containing a newline', function (): void {
     new CandidatesParameter(["Alice\nMalice"]);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);

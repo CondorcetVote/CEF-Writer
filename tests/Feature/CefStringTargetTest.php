@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use CondorcetVote\CefWriter\{Cef, CommentLine, VoteLine};
 use CondorcetVote\CefWriter\Parameter\{CandidatesParameter, ImplicitRankingParameter, WeightAllowedParameter};
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{InvalidValueException, InvalidWriterStateException};
 
 it('appends to the caller string by reference', function (): void {
     [$cef, $buffer] = makeStringCef();
@@ -17,13 +17,13 @@ it('appends to the caller string by reference', function (): void {
 
 it('throws when neither file nor string is provided', function (): void {
     new Cef;
-})->throws(CefFormatException::class, 'Exactly one');
+})->throws(InvalidWriterStateException::class, 'Exactly one');
 
 it('throws when both file and string are provided', function (): void {
     $buffer = '';
 
     new Cef(file: '/tmp/whatever', string: $buffer);
-})->throws(CefFormatException::class, 'Exactly one');
+})->throws(InvalidWriterStateException::class, 'Exactly one');
 
 it('reproduces the spec\'s implicit-ranking example almost verbatim', function (): void {
     [$cef, $buffer] = makeStringCef();
@@ -108,7 +108,7 @@ it('locks parameter writing after the first vote', function (): void {
     $cef->addParameter(new CandidatesParameter(['A']));
     $cef->addVote(new VoteLine([['A']]));
     $cef->addParameter(new ImplicitRankingParameter(true));
-})->throws(CefFormatException::class, 'before any vote');
+})->throws(InvalidWriterStateException::class, 'before any vote');
 
 it('allows comments and empty lines on either side of the vote boundary', function (): void {
     [$cef, $buffer] = makeStringCef();
@@ -153,7 +153,7 @@ it('addCommentLine() validates the text just like CommentLine would', function (
     [$cef] = makeStringCef();
 
     $cef->addCommentLine("multi\nline");
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('returns $this from every add method to support chaining', function (): void {
     [$cef, $buffer] = makeStringCef();

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use CondorcetVote\CefWriter\Cef;
-use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 /**
  * Build a Cef writer that streams into a fresh string buffer, returning
@@ -43,6 +42,3 @@ function makeTempPath(): string
 
     return $path;
 }
-
-// Re-export for clarity in tests.
-class_exists(CefFormatException::class);

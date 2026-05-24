@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace CondorcetVote\CefWriter\Exception;
 
 /**
- * Thrown whenever an input would produce a CEF document that violates the
- * Condorcet Election Format specification, or when the library is asked to
- * perform an operation that is forbidden by its streaming contract
- * (for example: adding a parameter after a vote has already been written).
+ * Base class for every input/format violation thrown by the library.
+ *
+ * Catch this class to handle any format-related failure uniformly; catch one
+ * of the dedicated subclasses ({@see InvalidUtf8Exception},
+ * {@see ReservedCharacterException}, {@see InvalidValueException},
+ * {@see DuplicateCandidateException}, {@see InvalidWriterStateException}) to
+ * branch on a specific kind of violation.
+ *
+ * Non-final on purpose so the library and downstream callers can refine the
+ * hierarchy further if needed.
  */
-final class CefFormatException extends \RuntimeException {}
+class CefFormatException extends \RuntimeException {}

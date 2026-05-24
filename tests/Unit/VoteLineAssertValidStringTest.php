@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, DuplicateCandidateException, InvalidValueException, InvalidWriterStateException};
 use CondorcetVote\CefWriter\VoteLine;
 
 it('accepts valid vote-line strings silently', function (string $line): void {
@@ -19,23 +19,23 @@ it('accepts valid vote-line strings silently', function (string $line): void {
 
 it('rejects an empty string', function (): void {
     VoteLine::assertValidString('');
-})->throws(CefFormatException::class, 'empty');
+})->throws(InvalidValueException::class, 'empty');
 
 it('rejects a duplicate candidate', function (): void {
     VoteLine::assertValidString('Alice > Bob > Alice');
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('rejects a zero weight', function (): void {
     VoteLine::assertValidString('Alice ^0');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a zero quantifier', function (): void {
     VoteLine::assertValidString('Alice * 0');
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a missing ranking', function (): void {
     VoteLine::assertValidString('tag1 || ');
-})->throws(CefFormatException::class, 'no ranking');
+})->throws(InvalidWriterStateException::class, 'no ranking');
 
 it('does not return any value', function (): void {
     $result = VoteLine::assertValidString('Alice > Bob');

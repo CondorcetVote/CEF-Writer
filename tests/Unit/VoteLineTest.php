@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\{DuplicateCandidateException, InvalidValueException, ReservedCharacterException};
 use CondorcetVote\CefWriter\VoteLine;
 
 it('renders a simple linear ranking in compact form', function (): void {
@@ -49,7 +49,7 @@ it('trims tied candidates individually and preserves their order', function (): 
 
 it('detects a duplicate that appears across separate tied groups', function (): void {
     new VoteLine([['Alice', 'Bob'], ['Charlie', 'Alice']]);
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('renders weight and quantifier in the spec order', function (): void {
     $line = new VoteLine(
@@ -114,36 +114,36 @@ it('stores the inline comment without rendering it itself', function (): void {
 
 it('rejects a ranking that repeats the same candidate', function (): void {
     new VoteLine([['A'], ['B'], ['A']]);
-})->throws(CefFormatException::class, 'more than once');
+})->throws(DuplicateCandidateException::class, 'more than once');
 
 it('rejects an empty rank', function (): void {
     new VoteLine([['A'], [], ['B']]);
-})->throws(CefFormatException::class, 'empty');
+})->throws(InvalidValueException::class, 'empty');
 
 it('rejects a candidate containing a reserved character', function (): void {
     new VoteLine([['A'], ['B>C']]);
-})->throws(CefFormatException::class);
+})->throws(ReservedCharacterException::class);
 
 it('rejects a tag containing a reserved character', function (): void {
     new VoteLine(ranking: [['A']], tags: ['valid', 'bad;tag']);
-})->throws(CefFormatException::class);
+})->throws(ReservedCharacterException::class);
 
 it('rejects an empty tag', function (): void {
     new VoteLine(ranking: [['A']], tags: ['valid', '   ']);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a zero weight', function (): void {
     new VoteLine(ranking: [['A']], weight: 0);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a negative weight', function (): void {
     new VoteLine(ranking: [['A']], weight: -1);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a zero quantifier', function (): void {
     new VoteLine(ranking: [['A']], quantifier: 0);
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);
 
 it('rejects a multi-line inline comment', function (): void {
     new VoteLine(ranking: [['A']], inlineComment: "first\nsecond");
-})->throws(CefFormatException::class);
+})->throws(InvalidValueException::class);

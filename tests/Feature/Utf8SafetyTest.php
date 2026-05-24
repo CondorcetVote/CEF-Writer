@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\CommentLine;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CandidatesParameter;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CustomParameter;
-use CondorcetVote\CondorcetElectionFormatGenerator\VoteLine;
+use CondorcetVote\CondorcetElectionFormatGenerator\{CommentLine, VoteLine};
+use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\{CandidatesParameter, CustomParameter};
 
 /*
  * UTF-8 safety relies on the property that ASCII bytes (0x00-0x7F) never

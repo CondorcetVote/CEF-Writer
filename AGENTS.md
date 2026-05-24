@@ -24,7 +24,14 @@ PHP library that **generates** [Condorcet Election Format (CEF)](https://github.
 
 ## Documentation
 
-- `README.md` is the project's public documentation. Keep it accurate, with usage examples.
+- `README.md` is the project's public documentation. **Always keep it up to date.**
+  Every change that adds, removes, or modifies a public API surface (new method,
+  new class, renamed method, changed signature, new exception type, new
+  runtime requirement, new behaviour) MUST be reflected in `README.md` in the
+  same change set. Treat the README as part of the API: out-of-date docs are
+  a bug.
+- Public examples in the README must actually run as written — when in doubt,
+  copy them into a scratch script and verify before committing.
 - Do **not** put project instructions inside `.github/` — they belong in this file.
 
 ## Format reference

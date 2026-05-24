@@ -8,17 +8,13 @@
     "require-dev": {
         "pestphp/pest": "^4.7",
         "friendsofphp/php-cs-fixer": "^3.95",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "julien-boudry/php-reference": "^0.7.0"
     },
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "CondorcetVote\\CefWriter\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "CondorcetVote\\CefWriter\\Tests\\": "tests/"
         }
     },
     "scripts": {

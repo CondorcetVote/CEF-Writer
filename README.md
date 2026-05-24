@@ -9,6 +9,8 @@ documents to a file or string with a friendly object API.
 - Semantics-free on purpose: this library checks **format**, never **election logic** (it will, for example, happily let a vote reference a candidate that is not in `#/Candidates:`).
 - Works with `\SplFileObject`, `\SplFileInfo`, a filesystem path, or a string passed **by reference**.
 
+**[Full API reference](docs/readme.md)** — generated from the source with [PhpReference](https://github.com/julien-boudry/PhpReference).
+
 ## Requirements
 
 - PHP **8.5** or later

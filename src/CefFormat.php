@@ -37,6 +37,8 @@ final class CefFormat
 
     /**
      * Reject any value that contains a reserved character or a line break.
+     * Empty strings are rejected too — this helper is meant for *required*
+     * structural values (names, tags, candidate labels, …).
      *
      * @throws CefFormatException
      */
@@ -46,6 +48,18 @@ final class CefFormat
             throw new CefFormatException(\sprintf('%s cannot be empty.', $context));
         }
 
+        self::assertNoReservedNorLineBreak($value, $context);
+    }
+
+    /**
+     * Reject any value that contains a reserved character or a line break,
+     * but accept the empty string. Use for optionally-empty value strings
+     * (e.g. a custom parameter's free-form value).
+     *
+     * @throws CefFormatException
+     */
+    public static function assertNoReservedNorLineBreak(string $value, string $context): void
+    {
         if (preg_match('/[\r\n]/', $value) === 1) {
             throw new CefFormatException(\sprintf('%s cannot contain a line break.', $context));
         }

@@ -29,14 +29,34 @@ it('rejects an empty name', function (): void {
     new CustomParameter('   ', 'value');
 })->throws(CefFormatException::class, 'empty');
 
-it('rejects a name containing a reserved character', function (): void {
-    new CustomParameter('Foo#Bar', 'value');
-})->throws(CefFormatException::class);
+it('rejects a name containing a reserved character', function (string $reserved): void {
+    new CustomParameter('Foo' . $reserved . 'Bar', 'value');
+})->with(['>', '=', ';', ',', '#', '/', '*', '^'])->throws(CefFormatException::class, 'reserved');
 
 it('rejects a name containing a colon', function (): void {
     new CustomParameter('Foo:Bar', 'value');
-})->throws(CefFormatException::class);
+})->throws(CefFormatException::class, ':');
+
+it('rejects a name containing a line break', function (string $break): void {
+    new CustomParameter('Foo' . $break . 'Bar', 'value');
+})->with(["\n", "\r", "\r\n"])->throws(CefFormatException::class, 'line break');
 
 it('rejects a value containing a newline', function (): void {
     new CustomParameter('Foo', "line1\nline2");
 })->throws(CefFormatException::class);
+
+it('rejects a value containing a reserved character', function (string $reserved): void {
+    new CustomParameter('Foo', 'hello' . $reserved . 'world');
+})->with(['>', '=', ';', ',', '#', '/', '*', '^'])->throws(CefFormatException::class, 'reserved');
+
+it('accepts an empty value (no required minimum content)', function (): void {
+    $param = new CustomParameter('Foo', '');
+
+    expect($param->value)->toBe('');
+});
+
+it('accepts whitespace-only value', function (): void {
+    $param = new CustomParameter('Foo', '   ');
+
+    expect($param->value)->toBe('   ');
+});

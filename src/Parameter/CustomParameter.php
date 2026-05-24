@@ -37,7 +37,7 @@ final class CustomParameter implements ParameterInterface
         }
 
         CefFormat::assertValueIsClean($trimmedName, 'Custom parameter name');
-        CefFormat::assertSingleLine($value, 'Custom parameter value');
+        CefFormat::assertNoReservedNorLineBreak($value, 'Custom parameter value');
 
         $this->name = $trimmedName;
         $this->value = $value;

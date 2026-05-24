@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\CefFormat;
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\CefFormat;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 it('accepts an empty string (unlike assertValueIsClean)', function (): void {
     CefFormat::assertNoReservedNorLineBreak('', 'X');

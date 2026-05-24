@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CandidatesParameter;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
 
 it('exposes the standard CEF parameter name', function (): void {
     expect(new CandidatesParameter(['A'])->getName())->toBe('Candidates');

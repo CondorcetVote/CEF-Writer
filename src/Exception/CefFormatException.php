@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator\Exception;
+namespace CondorcetVote\CefWriter\Exception;
 
 /**
  * Thrown whenever an input would produce a CEF document that violates the

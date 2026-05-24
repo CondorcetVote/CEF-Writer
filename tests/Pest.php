@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Cef;
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Cef;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 /**
  * Build a Cef writer that streams into a fresh string buffer, returning

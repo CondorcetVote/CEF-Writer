@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\CommentLine;
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\CommentLine;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 it('prefixes the text with "#" and a space when autoFormat is on', function (): void {
     $comment = new CommentLine('hello world');

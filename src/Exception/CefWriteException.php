@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator\Exception;
+namespace CondorcetVote\CefWriter\Exception;
 
 /**
  * Thrown when writing to the underlying target (`\SplFileObject` or string

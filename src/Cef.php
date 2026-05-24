@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator;
+namespace CondorcetVote\CefWriter;
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\{CefFormatException, CefWriteException};
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\ParameterInterface;
+use CondorcetVote\CefWriter\Exception\{CefFormatException, CefWriteException};
+use CondorcetVote\CefWriter\Parameter\ParameterInterface;
 
 /**
  * Streaming writer for a single Condorcet Election Format document.

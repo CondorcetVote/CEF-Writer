@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator\Parameter;
+namespace CondorcetVote\CefWriter\Parameter;
 
 /**
  * Enumeration of the parameter names defined by the CEF specification.

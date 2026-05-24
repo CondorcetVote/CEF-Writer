@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator\Parameter;
+namespace CondorcetVote\CefWriter\Parameter;
 
 /**
  * Contract every parameter object (standard or custom) must implement.

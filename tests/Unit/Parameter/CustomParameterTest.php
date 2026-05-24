@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CustomParameter;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Parameter\CustomParameter;
 
 it('exposes the supplied name and value', function (): void {
     $param = new CustomParameter('My Setting', 'some-value');

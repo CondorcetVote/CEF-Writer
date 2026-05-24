@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\StandardParameter;
+use CondorcetVote\CefWriter\Parameter\StandardParameter;
 
 it('maps each case to the exact spec parameter name', function (): void {
     expect(StandardParameter::Candidates->value)->toBe('Candidates');

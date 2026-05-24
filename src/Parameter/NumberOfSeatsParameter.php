@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator\Parameter;
+namespace CondorcetVote\CefWriter\Parameter;
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 /**
  * `#/Number of Seats:` parameter — strictly positive integer.

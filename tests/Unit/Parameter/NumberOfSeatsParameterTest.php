@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\NumberOfSeatsParameter;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Parameter\NumberOfSeatsParameter;
 
 it('emits the integer as its formatted value', function (): void {
     $param = new NumberOfSeatsParameter(42);

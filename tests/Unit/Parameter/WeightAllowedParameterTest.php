@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\WeightAllowedParameter;
+use CondorcetVote\CefWriter\Parameter\WeightAllowedParameter;
 
 it('renders the standard boolean tokens', function (): void {
     $on = new WeightAllowedParameter(true);

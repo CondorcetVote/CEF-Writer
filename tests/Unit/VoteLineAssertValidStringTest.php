@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\VoteLine;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\VoteLine;
 
 it('accepts valid vote-line strings silently', function (string $line): void {
     VoteLine::assertValidString($line);

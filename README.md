@@ -1,6 +1,6 @@
-# Condorcet Election Format Generator
+# CEF Writer
 
-A small, PHP library that **streams** valid
+A small PHP library that **streams** valid
 [Condorcet Election Format](https://github.com/CondorcetVote/CondorcetElectionFormat) (CEF)
 documents to a file or string with a friendly object API.
 
@@ -17,18 +17,18 @@ documents to a file or string with a friendly object API.
 ## Installation
 
 ```bash
-composer require julien/condorcet-election-format-generator
+composer require condorcet-vote/cef-writer
 ```
 
 ## Quick start
 
 ```php
-use CondorcetVote\CondorcetElectionFormatGenerator\Cef;
-use CondorcetVote\CondorcetElectionFormatGenerator\CommentLine;
-use CondorcetVote\CondorcetElectionFormatGenerator\VoteLine;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CandidatesParameter;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\ImplicitRankingParameter;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\WeightAllowedParameter;
+use CondorcetVote\CefWriter\Cef;
+use CondorcetVote\CefWriter\CommentLine;
+use CondorcetVote\CefWriter\VoteLine;
+use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
+use CondorcetVote\CefWriter\Parameter\ImplicitRankingParameter;
+use CondorcetVote\CefWriter\Parameter\WeightAllowedParameter;
 
 $cef = new Cef(file: '/tmp/election.cvotes');
 

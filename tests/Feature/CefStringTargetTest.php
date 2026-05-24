@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\{Cef, CommentLine, VoteLine};
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\{CandidatesParameter, ImplicitRankingParameter, WeightAllowedParameter};
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\{Cef, CommentLine, VoteLine};
+use CondorcetVote\CefWriter\Parameter\{CandidatesParameter, ImplicitRankingParameter, WeightAllowedParameter};
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 it('appends to the caller string by reference', function (): void {
     [$cef, $buffer] = makeStringCef();

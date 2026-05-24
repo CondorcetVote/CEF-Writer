@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator\Parameter;
+namespace CondorcetVote\CefWriter\Parameter;
 
-use CondorcetVote\CondorcetElectionFormatGenerator\CefFormat;
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\CefFormat;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 /**
  * `#/Candidates:` parameter — declares the official list of candidates.

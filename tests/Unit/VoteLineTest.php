@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\VoteLine;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\VoteLine;
 
 it('renders a simple linear ranking in compact form', function (): void {
     $line = new VoteLine([['A'], ['B'], ['C']]);

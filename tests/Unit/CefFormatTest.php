@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\CefFormat;
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\CefFormat;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 it('lists the reserved characters mandated by the spec', function (): void {
     expect(CefFormat::RESERVED_CHARACTERS)

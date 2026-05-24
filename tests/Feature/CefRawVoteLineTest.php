@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CandidatesParameter;
-use CondorcetVote\CondorcetElectionFormatGenerator\VoteLine;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
+use CondorcetVote\CefWriter\VoteLine;
 
 it('writes a raw vote line verbatim', function (): void {
     [$cef, $buffer] = makeStringCef();

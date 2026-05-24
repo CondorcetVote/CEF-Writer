@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\{Cef, VoteLine};
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CandidatesParameter;
+use CondorcetVote\CefWriter\{Cef, VoteLine};
+use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
 
 it('writes to a path provided as a string', function (): void {
     $path = makeTempPath();

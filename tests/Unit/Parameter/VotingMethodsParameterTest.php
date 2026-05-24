@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\VotingMethodsParameter;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Parameter\VotingMethodsParameter;
 
 it('joins method names with semicolons', function (): void {
     $param = new VotingMethodsParameter(['Schulze', 'Copeland', 'Ranked Pairs']);

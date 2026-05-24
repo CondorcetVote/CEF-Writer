@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\ImplicitRankingParameter;
+use CondorcetVote\CefWriter\Parameter\ImplicitRankingParameter;
 
 it('renders true as the literal "true"', function (): void {
     $param = new ImplicitRankingParameter(true);

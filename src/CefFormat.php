@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace CondorcetVote\CondorcetElectionFormatGenerator;
+namespace CondorcetVote\CefWriter;
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CefWriter\Exception\CefFormatException;
 
 /**
  * Internal helpers shared across the writer and the value objects.

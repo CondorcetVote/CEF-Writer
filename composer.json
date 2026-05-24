@@ -1,5 +1,5 @@
 {
-    "name": "julien/condorcet-election-format-generator",
+    "name": "condorcet-vote/cef-writer",
     "type": "library",
     "require": {
         "php": "^8.5",
@@ -13,12 +13,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "CondorcetVote\\CondorcetElectionFormatGenerator\\": "src/"
+            "CondorcetVote\\CefWriter\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "CondorcetVote\\CondorcetElectionFormatGenerator\\Tests\\": "tests/"
+            "CondorcetVote\\CefWriter\\Tests\\": "tests/"
         }
     },
     "scripts": {

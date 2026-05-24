@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Cef;
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefWriteException;
-use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\CandidatesParameter;
+use CondorcetVote\CefWriter\Cef;
+use CondorcetVote\CefWriter\Exception\CefWriteException;
+use CondorcetVote\CefWriter\Parameter\CandidatesParameter;
 
 /**
  * Stream wrapper whose every write reports failure. Used to simulate a broken

@@ -52,17 +52,16 @@ final class CefFormat
     }
 
     /**
-     * Reject any value that contains a reserved character or a line break,
-     * but accept the empty string. Use for optionally-empty value strings
-     * (e.g. a custom parameter's free-form value).
+     * Reject any value that contains a reserved character, a line break, a
+     * null byte, or an invalid UTF-8 byte sequence. Accept the empty string.
+     * Use for optionally-empty value strings (e.g. a custom parameter's
+     * free-form value).
      *
      * @throws CefFormatException
      */
     public static function assertNoReservedNorLineBreak(string $value, string $context): void
     {
-        if (preg_match('/[\r\n]/', $value) === 1) {
-            throw new CefFormatException(\sprintf('%s cannot contain a line break.', $context));
-        }
+        self::assertSafeText($value, $context);
 
         foreach (self::RESERVED_CHARACTERS as $reserved) {
             if (str_contains($value, $reserved)) {
@@ -76,14 +75,41 @@ final class CefFormat
     }
 
     /**
-     * Inline comments are free-form text but must stay on a single line.
+     * Inline comments are free-form text but must stay on a single line and
+     * contain only valid UTF-8 (with no null byte).
      *
      * @throws CefFormatException
      */
     public static function assertSingleLine(string $value, string $context): void
     {
+        self::assertSafeText($value, $context);
+    }
+
+    /**
+     * Verify that `$value` is valid UTF-8, single-line, and contains no null
+     * byte. Shared base for every value-bound assertion above.
+     *
+     * UTF-8 validity is delegated to `mb_check_encoding()` (ext-mbstring is a
+     * declared runtime dependency of this library) — the C-level scanner is
+     * faster than a `preg_match('//u', $value)` round-trip through PCRE.
+     *
+     * @throws CefFormatException
+     */
+    private static function assertSafeText(string $value, string $context): void
+    {
+        if (! mb_check_encoding($value, 'UTF-8')) {
+            throw new CefFormatException(\sprintf(
+                '%s contains an invalid UTF-8 byte sequence.',
+                $context,
+            ));
+        }
+
         if (preg_match('/[\r\n]/', $value) === 1) {
             throw new CefFormatException(\sprintf('%s cannot contain a line break.', $context));
+        }
+
+        if (str_contains($value, "\0")) {
+            throw new CefFormatException(\sprintf('%s cannot contain a null byte.', $context));
         }
     }
 }

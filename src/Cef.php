@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CondorcetVote\CondorcetElectionFormatGenerator;
 
-use CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException;
+use CondorcetVote\CondorcetElectionFormatGenerator\Exception\{CefFormatException, CefWriteException};
 use CondorcetVote\CondorcetElectionFormatGenerator\Parameter\ParameterInterface;
 
 /**
@@ -249,7 +249,16 @@ final class Cef
         $line = $content . "\n";
 
         if ($this->file !== null) {
-            $this->file->fwrite($line);
+            $written = $this->file->fwrite($line);
+
+            if ($written === false || $written < \strlen($line)) {
+                throw new CefWriteException(\sprintf(
+                    'Failed to write %d bytes to the file target (fwrite returned %s). '
+                    . 'The underlying handle may be closed, read-only, or out of space.',
+                    \strlen($line),
+                    $written === false ? 'false' : (string) $written,
+                ));
+            }
 
             return;
         }

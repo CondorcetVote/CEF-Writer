@@ -13,6 +13,16 @@
             "CondorcetVote\\CondorcetElectionFormatGenerator\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "CondorcetVote\\CondorcetElectionFormatGenerator\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "phpstan": "phpstan analyse",
+        "cs-fix": "php-cs-fixer fix"
+    },
     "authors": [
         {
             "name": "Julien Boudry",

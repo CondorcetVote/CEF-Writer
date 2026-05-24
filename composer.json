@@ -2,6 +2,7 @@
     "name": "julien/condorcet-election-format-generator",
     "type": "library",
     "require-dev": {
+        "php": "^8.5",
         "pestphp/pest": "^4.7",
         "friendsofphp/php-cs-fixer": "^3.95"
     },

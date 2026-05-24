@@ -24,6 +24,33 @@ it('renders ties with the equality separator', function (): void {
     expect($line->format(true))->toBe('A > B = C > D');
 });
 
+it('stores tied candidates as a single inner array on the ranking property', function (): void {
+    $line = new VoteLine([['Alice'], ['Bob', 'Charlie', 'Dave'], ['Eve']]);
+
+    expect($line->ranking)->toBe([
+        ['Alice'],
+        ['Bob', 'Charlie', 'Dave'],
+        ['Eve'],
+    ]);
+});
+
+it('accepts a single rank with several tied candidates and no other ranks', function (): void {
+    $line = new VoteLine([['Alice', 'Bob', 'Charlie']]);
+
+    expect($line->ranking)->toBe([['Alice', 'Bob', 'Charlie']]);
+    expect($line->format(true))->toBe('Alice = Bob = Charlie');
+});
+
+it('trims tied candidates individually and preserves their order', function (): void {
+    $line = new VoteLine([['  Alice  ', "\tBob", ' Charlie ']]);
+
+    expect($line->ranking)->toBe([['Alice', 'Bob', 'Charlie']]);
+});
+
+it('detects a duplicate that appears across separate tied groups', function (): void {
+    new VoteLine([['Alice', 'Bob'], ['Charlie', 'Alice']]);
+})->throws(CefFormatException::class, 'more than once');
+
 it('renders weight and quantifier in the spec order', function (): void {
     $line = new VoteLine(
         ranking: [['A'], ['B']],

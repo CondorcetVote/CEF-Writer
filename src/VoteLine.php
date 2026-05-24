@@ -73,6 +73,102 @@ final class VoteLine
     }
 
     /**
+     * Build a {@see VoteLine} from a raw CEF vote-line string.
+     *
+     * Accepted shape — every component except the ranking is optional:
+     *
+     *     [tag1, tag2 || ] ranking [ ^weight] [ *quantifier] [# comment]
+     *
+     * Both the relaxed and the compact spacing flavors are accepted, e.g.
+     * `"A>B^7*2"` and `"A > B ^7 * 2"` parse identically. The `/EMPTY_RANKING/`
+     * sentinel is recognised as a blank ballot.
+     *
+     * The string is parsed into its components; the resulting `VoteLine` is
+     * then constructed through the normal constructor, so every validation
+     * rule (reserved characters, empty rank, duplicate candidate, positive
+     * weight / quantifier) applies.
+     *
+     * @throws CefFormatException
+     */
+    public static function fromString(string $line): self
+    {
+        $original = $line;
+        $work = trim($line);
+
+        if ($work === '') {
+            throw new CefFormatException('Vote line string cannot be empty.');
+        }
+
+        $inlineComment = null;
+        $hashPos = strpos($work, '#');
+
+        if ($hashPos !== false) {
+            $after = substr($work, $hashPos + 1);
+
+            if (str_starts_with($after, ' ')) {
+                $after = substr($after, 1);
+            }
+
+            $after = rtrim($after);
+            $inlineComment = $after !== '' ? $after : null;
+            $work = rtrim(substr($work, 0, $hashPos));
+        }
+
+        $tags = [];
+        $separator = CefFormat::TAGS_SEPARATOR;
+        $separatorPos = strpos($work, $separator);
+
+        if ($separatorPos !== false) {
+            $tagsPart = substr($work, 0, $separatorPos);
+            $work = trim(substr($work, $separatorPos + \strlen($separator)));
+
+            foreach (explode(',', $tagsPart) as $rawTag) {
+                $tags[] = trim($rawTag);
+            }
+        }
+
+        $weight = null;
+        $quantifier = null;
+
+        if (preg_match('/^(.*?)(?:\s*\^\s*(\d+))?(?:\s*\*\s*(\d+))?\s*$/s', $work, $matches, \PREG_UNMATCHED_AS_NULL) === 1) {
+            $work = trim($matches[1]);
+
+            if (isset($matches[2])) {
+                $weight = (int) $matches[2];
+            }
+
+            if (isset($matches[3])) {
+                $quantifier = (int) $matches[3];
+            }
+        }
+
+        if ($work === '') {
+            throw new CefFormatException(\sprintf(
+                'Vote line "%s" has no ranking.',
+                trim($original),
+            ));
+        }
+
+        if ($work === CefFormat::EMPTY_RANKING) {
+            $ranking = [];
+        } else {
+            $ranking = [];
+
+            foreach (explode('>', $work) as $rankString) {
+                $rank = [];
+
+                foreach (explode('=', $rankString) as $candidate) {
+                    $rank[] = trim($candidate);
+                }
+
+                $ranking[] = $rank;
+            }
+        }
+
+        return new self($ranking, $tags, $weight, $quantifier, $inlineComment);
+    }
+
+    /**
      * Render the ballot — *without* trailing newline or inline comment — using
      * the spacing flavor selected by `$autoFormat`.
      */

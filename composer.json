@@ -1,6 +1,8 @@
 {
     "name": "condorcet-vote/cef-writer",
+    "description": "Streaming PHP writer that produces valid Condorcet Election Format (CEF) files line by line.",
     "type": "library",
+    "keywords": ["condorcet", "election", "cef", "voting", "writer", "streaming"],
     "require": {
         "php": "^8.5",
         "ext-mbstring": "*"

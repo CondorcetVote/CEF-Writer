@@ -135,6 +135,59 @@ final class Cef
     }
 
     /**
+     * Emit a vote line directly from a pre-built string, skipping the
+     * allocation of a {@see VoteLine} instance. Use this when you already have
+     * ballots as text and want the fastest path to the output.
+     *
+     * The full CEF vote-line format is enforced — the same validation rules
+     * that {@see VoteLine::fromString()} applies are run via
+     * {@see VoteLine::assertValidString()}. In particular:
+     *   - structural checks first: a single trailing line terminator
+     *     (`\r\n`, `\n`, `\r`) is stripped, surrounding whitespace is trimmed,
+     *     the result must be non-empty, must not contain any remaining
+     *     `\r`/`\n`, and must not start with `#` (which would be a comment or
+     *     a parameter line, not a vote);
+     *   - format checks then: tags, ranking, weight, quantifier and inline
+     *     comment are parsed and validated against every CEF rule (reserved
+     *     characters, empty rank, duplicate candidate, positive weight /
+     *     quantifier, single-line comment).
+     *
+     * The `autoFormat` flag has no effect on a raw line: what you pass is
+     * what gets written (after structural cleaning).
+     *
+     * @throws CefFormatException
+     */
+    public function addRawVoteLine(string $line): self
+    {
+        $cleaned = preg_replace('/\r\n\z|[\r\n]\z/', '', $line) ?? $line;
+        $cleaned = trim($cleaned);
+
+        if ($cleaned === '') {
+            throw new CefFormatException('Raw vote line cannot be empty.');
+        }
+
+        if (preg_match('/[\r\n]/', $cleaned) === 1) {
+            throw new CefFormatException(
+                'Raw vote line must be a single line; embedded newlines are not allowed.',
+            );
+        }
+
+        if ($cleaned[0] === '#') {
+            throw new CefFormatException(
+                'Raw vote line cannot start with "#"; that would be a comment or parameter line, not a vote.',
+            );
+        }
+
+        VoteLine::assertValidString($cleaned);
+
+        $this->writeAutoSeparatorIfNeeded();
+        $this->writeLine($cleaned);
+        $this->voteEmitted = true;
+
+        return $this;
+    }
+
+    /**
      * Emit a standalone comment line.
      */
     public function addComment(CommentLine $comment): self

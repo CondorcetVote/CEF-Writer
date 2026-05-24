@@ -92,6 +92,55 @@ final class VoteLine
      */
     public static function fromString(string $line): self
     {
+        $parts = self::parseStringComponents($line);
+
+        return new self(
+            ranking: $parts['ranking'],
+            tags: $parts['tags'],
+            weight: $parts['weight'],
+            quantifier: $parts['quantifier'],
+            inlineComment: $parts['inlineComment'],
+        );
+    }
+
+    /**
+     * Validate that `$line` is a syntactically valid CEF vote line, without
+     * allocating a `VoteLine` instance.
+     *
+     * The exact same parsing and validation pipeline that {@see fromString()}
+     * uses is applied — only the final object construction is skipped. Useful
+     * for hot paths that want to write a pre-built line straight to the output
+     * after a strict format check.
+     *
+     * @throws CefFormatException
+     */
+    public static function assertValidString(string $line): void
+    {
+        self::parseStringComponents($line);
+    }
+
+    /**
+     * Shared parser+validator used by {@see fromString()} and
+     * {@see assertValidString()}.
+     *
+     * Trims the input, extracts every component, and runs the same per-field
+     * validation (reserved characters, empty rank, duplicate candidate,
+     * positive weight / quantifier, single-line comment) that the constructor
+     * performs. Returns the components as a named array.
+     *
+     *
+     * @throws CefFormatException
+     *
+     * @return array{
+     *     ranking: list<list<string>>,
+     *     tags: list<string>,
+     *     weight: ?int,
+     *     quantifier: ?int,
+     *     inlineComment: ?string,
+     * }
+     */
+    private static function parseStringComponents(string $line): array
+    {
         $original = $line;
         $work = trim($line);
 
@@ -114,7 +163,11 @@ final class VoteLine
             $work = rtrim(substr($work, 0, $hashPos));
         }
 
-        $tags = [];
+        if ($inlineComment !== null) {
+            CefFormat::assertSingleLine($inlineComment, 'Inline comment');
+        }
+
+        $rawTags = [];
         $separator = CefFormat::TAGS_SEPARATOR;
         $separatorPos = strpos($work, $separator);
 
@@ -123,7 +176,7 @@ final class VoteLine
             $work = trim(substr($work, $separatorPos + \strlen($separator)));
 
             foreach (explode(',', $tagsPart) as $rawTag) {
-                $tags[] = trim($rawTag);
+                $rawTags[] = trim($rawTag);
             }
         }
 
@@ -142,6 +195,14 @@ final class VoteLine
             }
         }
 
+        if ($weight !== null && $weight < 1) {
+            throw new CefFormatException('Weight must be a positive integer.');
+        }
+
+        if ($quantifier !== null && $quantifier < 1) {
+            throw new CefFormatException('Quantifier must be a positive integer.');
+        }
+
         if ($work === '') {
             throw new CefFormatException(\sprintf(
                 'Vote line "%s" has no ranking.',
@@ -150,9 +211,9 @@ final class VoteLine
         }
 
         if ($work === CefFormat::EMPTY_RANKING) {
-            $ranking = [];
+            $rawRanking = [];
         } else {
-            $ranking = [];
+            $rawRanking = [];
 
             foreach (explode('>', $work) as $rankString) {
                 $rank = [];
@@ -161,11 +222,17 @@ final class VoteLine
                     $rank[] = trim($candidate);
                 }
 
-                $ranking[] = $rank;
+                $rawRanking[] = $rank;
             }
         }
 
-        return new self($ranking, $tags, $weight, $quantifier, $inlineComment);
+        return [
+            'ranking' => self::validateRanking($rawRanking),
+            'tags' => self::validateTags($rawTags),
+            'weight' => $weight,
+            'quantifier' => $quantifier,
+            'inlineComment' => $inlineComment,
+        ];
     }
 
     /**

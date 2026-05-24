@@ -40,7 +40,7 @@ jobs:
         run: vendor/bin/pest --colors=always
 
   phpstan:
-    name: "PHPStan (level 8)"
+    name: "PHPStan"
     runs-on: ubuntu-latest
 
     steps:

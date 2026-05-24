@@ -154,7 +154,7 @@ broken — for example:
 ```bash
 composer install
 vendor/bin/pest         # run tests
-vendor/bin/phpstan      # static analysis (level 8)
+vendor/bin/phpstan      # static analysis
 vendor/bin/php-cs-fixer fix
 ```
 

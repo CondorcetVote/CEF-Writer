@@ -10,7 +10,7 @@ PHP library that **generates** [Condorcet Election Format (CEF)](https://github.
 
 - Modern PHP — minimum PHP **8.5** (see `composer.json`).
 - Every symbol must be strictly typed (parameters, return types, properties).
-- PHPStan **level 8** must pass (`vendor/bin/phpstan analyse`).
+- PHPStan must pass (`vendor/bin/phpstan analyse`).
 - PHPDoc on every public symbol. Use PHPDoc for shapes PHP cannot express (`list<string>`, `array<string, int>`, etc.).
 - All identifiers, comments, docs, commit messages, exceptions: **English only**.
 - Comments only when the *why* is non-obvious. Code should be self-documenting.

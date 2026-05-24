@@ -9,6 +9,11 @@ documents to a file or string with a friendly object API.
 - Semantics-free on purpose: this library checks **format**, never **election logic** (it will, for example, happily let a vote reference a candidate that is not in `#/Candidates:`).
 - Works with `\SplFileObject`, `\SplFileInfo`, a filesystem path, or a string passed **by reference**.
 
+## Requirements
+
+- PHP **8.5** or later
+- `ext-mbstring` (used for UTF-8 validation; bundled with PHP)
+
 ## Installation
 
 ```bash
@@ -111,6 +116,8 @@ Parameters can only be added before the first vote — any later call throws
 
 ### Vote lines
 
+The typed way — build a `VoteLine` and pass it to `Cef::addVote()`:
+
 ```php
 new VoteLine(
     ranking:       [['Alice'], ['Bob', 'Charlie']], // [] => /EMPTY_RANKING/
@@ -124,10 +131,50 @@ new VoteLine(
 Each rank is itself a list of tied candidates. An empty top-level ranking
 emits the `/EMPTY_RANKING/` blank-ballot sentinel.
 
+#### From a raw string — `VoteLine::fromString()`
+
+Parse a full CEF vote-line string into a `VoteLine` instance. Every component
+is optional except the ranking; both the relaxed (`A > B ^7 * 2`) and the
+compact (`A>B^7*2`) spacing flavors are accepted, plus the `/EMPTY_RANKING/`
+sentinel.
+
+```php
+$cef->addVote(VoteLine::fromString('voter@example.com || Alice > Bob ^7 * 3 # late ballot'));
+```
+
+The string is parsed, every component is validated against the same rules as
+the constructor, and a `VoteLine` is returned. Throws `CefFormatException` on
+any malformed component.
+
+#### Pre-validated raw lines — `Cef::addRawVoteLine()`
+
+When you already have ballots as text and want the fastest write path,
+`addRawVoteLine()` skips the `VoteLine` allocation while still enforcing the
+full CEF format:
+
+```php
+$cef->addRawVoteLine('Alice > Bob = Charlie ^7 * 8');
+```
+
+It strips one trailing line terminator (`\r\n`, `\n`, `\r`), trims, rejects
+empty / multi-line / leading-`#` inputs, then runs
+`VoteLine::assertValidString()` for the same deep validation as
+`fromString()`. The `autoFormat` flag is **not** applied — what you pass is
+what gets written. About 1.8× faster than `addVote(VoteLine::fromString())`
+in practice.
+
+#### Validation-only — `VoteLine::assertValidString()`
+
+If you want to validate a vote-line string without allocating a `VoteLine`
+(e.g. to pre-flight user input before queueing it elsewhere), call the
+static `assertValidString()` — same pipeline as `fromString()`, no object
+returned, throws `CefFormatException` on any violation.
+
 ### Comments and blank lines
 
 ```php
 $cef->addComment(new CommentLine('section divider'));
+$cef->addCommentLine('shortcut — builds the CommentLine for you');
 $cef->addEmptyLine();
 ```
 
@@ -137,26 +184,43 @@ classes intentionally do not expose one.
 
 ## Errors
 
-Any specification violation throws
-`CondorcetVote\CondorcetElectionFormatGenerator\Exception\CefFormatException`.
-The exception message names the offending field and the rule that was
-broken — for example:
+Two exception types, each for a different layer:
+
+### `CefFormatException`
+
+Thrown for any specification or input violation. The message names the
+offending field and the rule that was broken. Triggers include:
 
 - empty candidate list,
 - duplicate candidate in `#/Candidates:` or within a single ranking,
 - a reserved character (`> = ; , # / * ^`) inside any structured value,
-- a line break in a name, tag, or inline comment,
+- a **null byte** (`\0`) inside any value,
+- an **invalid UTF-8** byte sequence inside any value,
+- a line break in a name, tag, comment, or inline comment,
 - a non-positive `weight` / `quantifier`,
-- adding a parameter after a vote has been emitted.
+- adding a parameter after a vote has been emitted,
+- malformed input passed to `VoteLine::fromString()` or `Cef::addRawVoteLine()`.
+
+### `CefWriteException`
+
+Thrown when writing to the underlying target (file or string buffer) fails —
+typically a closed handle, a read-only file, or a full disk. Distinct from
+`CefFormatException` because the cause is I/O, not your input. Extends
+`\RuntimeException`.
 
 ## Development
 
 ```bash
 composer install
-vendor/bin/pest         # run tests
-vendor/bin/phpstan      # static analysis
-vendor/bin/php-cs-fixer fix
+vendor/bin/pest                                # run tests
+vendor/bin/phpstan analyse                     # static analysis
+vendor/bin/php-cs-fixer fix                    # apply lint
+vendor/bin/php-cs-fixer fix --dry-run --diff   # check lint without writing
 ```
+
+CI (`.github/workflows/ci.yml`) runs the test suite on Linux / Windows / macOS,
+plus a dedicated job with **JIT function mode** enabled, plus PHPStan and
+PHP CS Fixer.
 
 ## License
 

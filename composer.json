@@ -1,0 +1,26 @@
+{
+    "name": "julien/condorcet-election-format-generator",
+    "type": "library",
+    "require-dev": {
+        "pestphp/pest": "^4.7",
+        "friendsofphp/php-cs-fixer": "^3.95"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "CondorcetVote\\CondorcetElectionFormatGenerator\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Julien Boudry",
+            "email": "julien@condorcet.vote"
+        }
+    ],
+    "require": {},
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

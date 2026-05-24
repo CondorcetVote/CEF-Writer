@@ -39,6 +39,38 @@ jobs:
         shell: bash
         run: vendor/bin/pest --colors=always
 
+  tests-jit:
+    name: "Tests · JIT function mode"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP with JIT (function mode)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+          extensions: opcache
+          ini-values: >-
+            opcache.enable_cli=1,
+            opcache.jit_buffer_size=64M,
+            opcache.jit=function
+
+      - name: Verify JIT is active
+        run: |
+          php -r 'exit((opcache_get_status(false)["jit"]["on"] ?? false) ? 0 : 1);' \
+            || (echo "JIT is not active!" && php -r 'print_r(opcache_get_status(false)["jit"] ?? "no jit info");' && exit 1)
+          echo "JIT is active."
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v4
+
+      - name: Run Pest with JIT
+        run: vendor/bin/pest --colors=always
+
   phpstan:
     name: "PHPStan"
     runs-on: ubuntu-latest

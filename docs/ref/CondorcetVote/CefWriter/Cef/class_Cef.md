@@ -43,6 +43,7 @@ most compact form is emitted.
 | [addCommentLine(...)](method_addCommentLine.md) | _Convenience helper: build a {@see CommentLine} from raw text and emit it in a single call._ |
 | [addEmptyLine(...)](method_addEmptyLine.md) | _Emit an empty line._ |
 | [addParameter(...)](method_addParameter.md) | _Emit a parameter line #/Name: value._ |
+| [addRawVote(...)](method_addRawVote.md) | _Emit a vote line from a **ranking-only** string plus strictly-typed companions — the secure, paranoid sibling of {@see addRawVoteLine()}._ |
 | [addRawVoteLine(...)](method_addRawVoteLine.md) | _Emit a vote line directly from a pre-built string, skipping the allocation of a {@see VoteLine} instance. Use this when you already have ballots as text and want the fastest path to the output._ |
 | [addVote(...)](method_addVote.md) | _Emit a vote line. Locks parameter mode permanently._ |
 
@@ -62,6 +63,7 @@ final class CondorcetVote\CefWriter\Cef
     public function addCommentLine( string $text ): self;
     public function addEmptyLine( ): self;
     public function addParameter( CondorcetVote\CefWriter\Parameter\ParameterInterface $parameter ): self;
+    public function addRawVote( string $vote, [ ?int $quantifier = null, ?int $weight = null, ?array $tags = null ] ): self;
     public function addRawVoteLine( string $line ): self;
     public function addVote( CondorcetVote\CefWriter\VoteLine $vote ): self;
 
@@ -87,6 +89,7 @@ final class CondorcetVote\CefWriter\Cef
     public function addCommentLine( string $text ): self;
     public function addEmptyLine( ): self;
     public function addParameter( CondorcetVote\CefWriter\Parameter\ParameterInterface $parameter ): self;
+    public function addRawVote( string $vote, [ ?int $quantifier = null, ?int $weight = null, ?array $tags = null ] ): self;
     public function addRawVoteLine( string $line ): self;
     public function addVote( CondorcetVote\CefWriter\VoteLine $vote ): self;
 

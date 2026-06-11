@@ -22,6 +22,7 @@ Optional companions:
 | Method Name | Description |
 | ------------- | ------------- |
 | [assertValidString(...)](method_assertValidString.md) | _Validate that $line is a syntactically valid CEF vote line, without allocating a VoteLine instance._ |
+| [fromRankingString(...)](method_fromRankingString.md) | _Build a {@see VoteLine} from a ranking-only string plus strictly-typed companions._ |
 | [fromString(...)](method_fromString.md) | _Build a {@see VoteLine} from a raw CEF vote-line string._ |
 
 ### Public Properties
@@ -54,6 +55,7 @@ final class CondorcetVote\CefWriter\VoteLine
 
     // Static Methods
     public static function assertValidString( string $line ): void;
+    public static function fromRankingString( string $ranking, [ array $tags = [], ?int $weight = null, ?int $quantifier = null ] ): self;
     public static function fromString( string $line ): self;
 
     // Methods
@@ -77,8 +79,10 @@ final class CondorcetVote\CefWriter\VoteLine
 
     // Static Methods
     public static function assertValidString( string $line ): void;
+    public static function fromRankingString( string $ranking, [ array $tags = [], ?int $weight = null, ?int $quantifier = null ] ): self;
     public static function fromString( string $line ): self;
     private static function parseStringComponents( string $line ): array;
+    private static function splitRanking( string $work ): array;
     private static function validateRanking( array $ranking ): array;
     private static function validateTags( array $tags ): array;
 

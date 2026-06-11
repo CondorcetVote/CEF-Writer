@@ -1,6 +1,6 @@
 > CondorcetVote \ [Cef](class_Cef.md)
 # Method addEmptyLine()
-> [Read it at source](https://github.com/CondorcetVote/CEF-Writer/blob/main/src/src/Cef.php#L212)
+> [Read it at source](https://github.com/CondorcetVote/CEF-Writer/blob/main/src/src/Cef.php#L259)
 
 ```php
 public function Cef->addEmptyLine( ): self

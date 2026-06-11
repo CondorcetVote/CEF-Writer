@@ -1,6 +1,6 @@
 > CondorcetVote \ [VoteLine](class_VoteLine.md)
 # Method format()
-> [Read it at source](https://github.com/CondorcetVote/CEF-Writer/blob/main/src/src/VoteLine.php#L242)
+> [Read it at source](https://github.com/CondorcetVote/CEF-Writer/blob/main/src/src/VoteLine.php#L279)
 
 ```php
 public function VoteLine->format( [ bool $autoFormat = true ] ): string

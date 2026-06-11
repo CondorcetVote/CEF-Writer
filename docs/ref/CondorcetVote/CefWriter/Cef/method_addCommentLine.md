@@ -1,6 +1,6 @@
 > CondorcetVote \ [Cef](class_Cef.md)
 # Method addCommentLine()
-> [Read it at source](https://github.com/CondorcetVote/CEF-Writer/blob/main/src/src/Cef.php#L204)
+> [Read it at source](https://github.com/CondorcetVote/CEF-Writer/blob/main/src/src/Cef.php#L251)
 
 ```php
 public function Cef->addCommentLine( string $text ): self

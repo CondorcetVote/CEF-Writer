@@ -80,12 +80,18 @@ final class VoteLine
         if ($verbatim) {
             // Verbatim mode: validate the ranking string but skip parsing it
             // into a Ranking — it is written as-is by format().
-            \assert(\is_string($ranking));
+            if (! \is_string($ranking)) {
+                throw new InvalidWriterStateException('Verbatim mode requires a ranking string.');
+            }
+
             Ranking::assertValidString($ranking);
             $this->ranking = null;
             $this->rawRanking = trim($ranking);
         } else {
-            \assert($ranking instanceof Ranking);
+            if (! $ranking instanceof Ranking) {
+                throw new InvalidWriterStateException('Non-verbatim mode requires a Ranking instance.');
+            }
+
             $this->ranking = $ranking;
             $this->rawRanking = null;
         }
@@ -339,7 +345,11 @@ final class VoteLine
             return $this->rawRanking;
         }
 
-        \assert($this->ranking !== null);
+        if ($this->ranking === null) {
+            throw new InvalidWriterStateException(
+                'VoteLine has neither a parsed ranking nor a verbatim ranking string.',
+            );
+        }
 
         return $this->ranking->format($autoFormat);
     }

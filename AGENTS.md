@@ -14,6 +14,10 @@ PHP library that **generates** [Condorcet Election Format (CEF)](https://github.
 - PHPDoc on every public symbol. Use PHPDoc for shapes PHP cannot express (`list<string>`, `array<string, int>`, etc.).
 - All identifiers, comments, docs, commit messages, exceptions: **English only**.
 - Comments only when the *why* is non-obvious. Code should be self-documenting.
+- **Never use `assert()`** (nor the `\assert()` language construct). Assertions
+  can be disabled in production (`zend.assertions`), so they are not a reliable
+  guard. Use normal runtime checks that always execute and throw an appropriate
+  exception instead.
 - Follow `.php-cs-fixer.dist.php` (run `vendor/bin/php-cs-fixer fix`).
 
 ## Testing

@@ -87,9 +87,12 @@ final class Cef
             $this->file = $file;
         } elseif ($file instanceof \SplFileInfo) {
             $this->file = $file->openFile('wb');
-        } else {
-            \assert(\is_string($file));
+        } elseif (\is_string($file)) {
             $this->file = new \SplFileObject($file, 'wb');
+        } else {
+            throw new InvalidWriterStateException(
+                'The $file argument must be a string path, an SplFileInfo, or an SplFileObject.',
+            );
         }
     }
 

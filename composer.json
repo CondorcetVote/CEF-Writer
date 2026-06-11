@@ -22,7 +22,8 @@
     "scripts": {
         "test": "pest",
         "phpstan": "phpstan analyse",
-        "linter": "php-cs-fixer fix"
+        "linter": "php-cs-fixer fix",
+        "document": "php-reference"
     },
     "authors": [
         {

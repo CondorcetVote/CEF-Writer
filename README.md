@@ -165,6 +165,44 @@ empty / multi-line / leading-`#` inputs, then runs
 what gets written. About 1.8× faster than `addVote(VoteLine::fromString())`
 in practice.
 
+#### Strict, ranking-only raw votes — `Cef::addRawVote()`
+
+`addRawVoteLine()` is deliberately permissive: because it accepts a *whole*
+vote line, the caller can embed tags, a weight, a quantifier or an inline
+comment directly in the text. When the ranking comes from an untrusted source
+and you want a hard guarantee that it cannot smuggle any of that in, use the
+strict sibling `addRawVote()`:
+
+```php
+$cef->addRawVote('Alice > Bob = Charlie', quantifier: 8, weight: 7, tags: ['voter@example.com']);
+// "voter@example.com || Alice > Bob = Charlie ^7 * 8"
+```
+
+`$vote` may contain **only** a ranking — candidate names joined by `>` and `=`,
+or the `/EMPTY_RANKING/` sentinel. Any line break, the `||` tag separator, and
+every reserved character (`^`, `*`, `#`, `;`, `,`, `/`) is rejected, so the
+string can never inject a weight, quantifier, tag, inline comment or a second
+vote. Those companions are supplied **exclusively** through the typed
+parameters:
+
+```php
+public function addRawVote(
+    string $vote,
+    ?int $quantifier = null,
+    ?int $weight = null,
+    ?array $tags = null,
+): self
+```
+
+`$weight` and `$quantifier` are nullable and default to `null`, in which case
+they are omitted from the output (keeping the line as short as possible); when
+provided they must be strictly positive. Just like
+`addRawVoteLine()`, the ranking string is written **verbatim** — its original
+spacing is preserved and `autoFormat` does **not** reformat it. The
+`autoFormat` flag still governs the layout of the library-built companions
+(the `||` tag separator, `^weight`, `*quantifier`). Throws
+`CefFormatException` on any malformed input.
+
 #### Validation-only — `VoteLine::assertValidString()`
 
 If you want to validate a vote-line string without allocating a `VoteLine`

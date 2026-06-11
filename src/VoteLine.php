@@ -120,6 +120,57 @@ final class VoteLine
     }
 
     /**
+     * Build a {@see VoteLine} from a ranking-only string plus strictly-typed
+     * companions.
+     *
+     * Unlike {@see fromString()}, the `$ranking` argument is parsed as a
+     * ranking and *nothing else*: it may contain candidate names joined by the
+     * `>` (rank) and `=` (tie) operators, or the `/EMPTY_RANKING/` sentinel.
+     * Any reserved character (`^`, `*`, `#`, `;`, `,`, `/`), the `||` tag
+     * separator, or a line break is rejected — there is no way to smuggle a
+     * weight, quantifier, tag or inline comment through the string. Those must
+     * be supplied through the dedicated, typed arguments.
+     *
+     * @param string       $ranking    Ranking only, e.g. `"A > B = C"` or `"/EMPTY_RANKING/"`.
+     * @param list<string> $tags       Optional tags written before `||`.
+     * @param int|null     $weight     Strictly positive weight, or `null`.
+     * @param int|null     $quantifier Strictly positive quantifier, or `null`.
+     *
+     * @throws CefFormatException
+     */
+    public static function fromRankingString(
+        string $ranking,
+        array $tags = [],
+        ?int $weight = null,
+        ?int $quantifier = null,
+    ): self {
+        $work = trim($ranking);
+
+        if ($work === '') {
+            throw new InvalidValueException(
+                'Vote ranking string cannot be empty; use "/EMPTY_RANKING/" for a blank ballot.',
+            );
+        }
+
+        // The "||" tag separator is the only forbidden pattern that
+        // per-candidate validation would not catch on its own ("|" is not a
+        // reserved character), so reject it explicitly here. Every reserved
+        // character and line break is rejected later by validateRanking().
+        if (str_contains($work, CefFormat::TAGS_SEPARATOR)) {
+            throw new ReservedCharacterException(
+                'Vote ranking cannot contain the "||" tag separator; pass tags through the $tags argument.',
+            );
+        }
+
+        return new self(
+            ranking: self::splitRanking($work),
+            tags: $tags,
+            weight: $weight,
+            quantifier: $quantifier,
+        );
+    }
+
+    /**
      * Shared parser+validator used by {@see fromString()} and
      * {@see assertValidString()}.
      *
@@ -210,21 +261,7 @@ final class VoteLine
             ));
         }
 
-        if ($work === CefFormat::EMPTY_RANKING) {
-            $rawRanking = [];
-        } else {
-            $rawRanking = [];
-
-            foreach (explode('>', $work) as $rankString) {
-                $rank = [];
-
-                foreach (explode('=', $rankString) as $candidate) {
-                    $rank[] = trim($candidate);
-                }
-
-                $rawRanking[] = $rank;
-            }
-        }
+        $rawRanking = self::splitRanking($work);
 
         return [
             'ranking' => self::validateRanking($rawRanking),
@@ -241,6 +278,31 @@ final class VoteLine
      */
     public function format(bool $autoFormat = true): string
     {
+        return $this->assemble($this->formatRanking($autoFormat), $autoFormat);
+    }
+
+    /**
+     * Render the ballot reusing a caller-supplied, already-validated ranking
+     * string *verbatim* instead of re-rendering the parsed ranking.
+     *
+     * Used by {@see Cef::addRawVote()} so that the raw ranking the caller
+     * passed is emitted untouched (its original spacing is preserved, exactly
+     * like {@see Cef::addRawVoteLine()}), while the typed companions (tags,
+     * weight, quantifier) are still laid out according to `$autoFormat`.
+     *
+     * @internal
+     */
+    public function formatWithRawRanking(string $rawRanking, bool $autoFormat = true): string
+    {
+        return $this->assemble($rawRanking, $autoFormat);
+    }
+
+    /**
+     * Wrap a ranking string with the tag prefix and the weight / quantifier
+     * suffix, using the spacing flavor selected by `$autoFormat`.
+     */
+    private function assemble(string $ranking, bool $autoFormat): string
+    {
         $line = '';
 
         if (\count($this->tags) > 0) {
@@ -249,7 +311,7 @@ final class VoteLine
             $line .= $autoFormat ? ' || ' : '||';
         }
 
-        $line .= $this->formatRanking($autoFormat);
+        $line .= $ranking;
 
         if ($this->weight !== null) {
             $line .= $autoFormat ? ' ^' . $this->weight : '^' . $this->weight;
@@ -277,6 +339,35 @@ final class VoteLine
         );
 
         return implode($rankSep, $ranks);
+    }
+
+    /**
+     * Split a cleaned ranking string into its raw, *un-validated* rank/tie
+     * structure. The `/EMPTY_RANKING/` sentinel maps to an empty list. Ranks
+     * are separated by `>`, tied candidates within a rank by `=`; every token
+     * is trimmed but not otherwise checked here.
+     *
+     * @return list<list<string>>
+     */
+    private static function splitRanking(string $work): array
+    {
+        if ($work === CefFormat::EMPTY_RANKING) {
+            return [];
+        }
+
+        $rawRanking = [];
+
+        foreach (explode('>', $work) as $rankString) {
+            $rank = [];
+
+            foreach (explode('=', $rankString) as $candidate) {
+                $rank[] = trim($candidate);
+            }
+
+            $rawRanking[] = $rank;
+        }
+
+        return $rawRanking;
     }
 
     /**

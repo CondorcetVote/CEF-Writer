@@ -188,6 +188,53 @@ final class Cef
     }
 
     /**
+     * Emit a vote line from a **ranking-only** string plus strictly-typed
+     * companions — the secure, paranoid sibling of {@see addRawVoteLine()}.
+     *
+     * Whereas {@see addRawVoteLine()} accepts a full vote line (and therefore
+     * lets the caller embed tags, a weight, a quantifier or an inline comment
+     * inside the text), `addRawVote()` guarantees that `$vote` carries *only*
+     * a ranking. Any line break, the `||` tag separator, and every reserved
+     * character (`^`, `*`, `#`, `;`, `,`, `/`) are rejected, so the string can
+     * never smuggle a weight, quantifier, tag, inline comment or second vote
+     * into the output. Use this when the ranking comes from an untrusted
+     * source.
+     *
+     * Weight, quantifier and tags are supplied exclusively through the typed
+     * parameters. `$weight` and `$quantifier` are nullable and default to
+     * `null`, in which case they are omitted from the output (keeping the line
+     * as short as possible); when provided they must be strictly positive.
+     *
+     * Just like {@see addRawVoteLine()}, the ranking string itself is written
+     * **verbatim** — its original spacing is preserved and `autoFormat` does
+     * not reformat it. The `autoFormat` flag still governs the layout of the
+     * library-built companions (the `||` tag separator, `^weight`,
+     * `*quantifier`).
+     *
+     * @param string            $vote       Ranking only, e.g. `"A > B = C"` or `"/EMPTY_RANKING/"`.
+     * @param int|null          $quantifier Strictly positive quantifier, or `null` to omit.
+     * @param int|null          $weight     Strictly positive weight, or `null` to omit.
+     * @param list<string>|null $tags       Optional tags written before `||`.
+     *
+     * @throws CefFormatException
+     */
+    public function addRawVote(string $vote, ?int $quantifier = null, ?int $weight = null, ?array $tags = null): self
+    {
+        $voteLine = VoteLine::fromRankingString(
+            $vote,
+            tags: $tags ?? [],
+            weight: $weight,
+            quantifier: $quantifier,
+        );
+
+        $this->writeAutoSeparatorIfNeeded();
+        $this->writeLine($voteLine->formatWithRawRanking(trim($vote), $this->autoFormat));
+        $this->voteEmitted = true;
+
+        return $this;
+    }
+
+    /**
      * Emit a standalone comment line.
      */
     public function addComment(CommentLine $comment): self

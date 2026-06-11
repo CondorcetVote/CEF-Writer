@@ -186,7 +186,7 @@ it('interoperates with addVote() afterwards', function (): void {
     [$cef, $buffer] = makeStringCef();
 
     $cef->addRawVote('Alice > Bob');
-    $cef->addVote(new VoteLine([['Charlie']]));
+    $cef->addVote(VoteLine::fromRanking([['Charlie']]));
 
     expect($buffer())->toBe("Alice > Bob\nCharlie\n");
 });

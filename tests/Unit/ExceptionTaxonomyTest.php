@@ -44,7 +44,7 @@ it('throws ReservedCharacterException for a `:` in a custom parameter name', fun
 })->throws(ReservedCharacterException::class);
 
 it('throws ReservedCharacterException for `||` in a tag', function (): void {
-    new VoteLine(ranking: [['A']], tags: ['oh||no']);
+    VoteLine::fromRanking(ranking: [['A']], tags: ['oh||no']);
 })->throws(ReservedCharacterException::class);
 
 it('throws ReservedCharacterException for a raw vote line starting with #', function (): void {
@@ -66,11 +66,11 @@ it('throws InvalidValueException for a candidate with a null byte', function ():
 })->throws(InvalidValueException::class);
 
 it('throws InvalidValueException for a zero quantifier', function (): void {
-    new VoteLine(ranking: [['A']], quantifier: 0);
+    VoteLine::fromRanking(ranking: [['A']], quantifier: 0);
 })->throws(InvalidValueException::class);
 
 it('throws InvalidValueException for a zero weight', function (): void {
-    new VoteLine(ranking: [['A']], weight: 0);
+    VoteLine::fromRanking(ranking: [['A']], weight: 0);
 })->throws(InvalidValueException::class);
 
 it('throws InvalidValueException for a non-positive Number of Seats', function (): void {
@@ -86,11 +86,11 @@ it('throws InvalidValueException for an empty Voting Methods list', function ():
 })->throws(InvalidValueException::class);
 
 it('throws InvalidValueException for an empty rank in the ranking', function (): void {
-    new VoteLine([['A'], [], ['B']]);
+    VoteLine::fromRanking([['A'], [], ['B']]);
 })->throws(InvalidValueException::class);
 
 it('throws DuplicateCandidateException when a candidate repeats in a ranking', function (): void {
-    new VoteLine([['A'], ['B'], ['A']]);
+    VoteLine::fromRanking([['A'], ['B'], ['A']]);
 })->throws(DuplicateCandidateException::class);
 
 it('throws DuplicateCandidateException for a duplicate in the Candidates list', function (): void {
@@ -109,7 +109,7 @@ it('throws InvalidWriterStateException when constructed with both file and strin
 it('throws InvalidWriterStateException for a parameter added after a vote', function (): void {
     $buf = '';
     $cef = new Cef(string: $buf);
-    $cef->addVote(new VoteLine([['A']]));
+    $cef->addVote(VoteLine::fromRanking([['A']]));
     $cef->addParameter(new CandidatesParameter(['A']));
 })->throws(InvalidWriterStateException::class);
 

@@ -35,15 +35,15 @@ it('reproduces the spec\'s implicit-ranking example almost verbatim', function (
     $cef->addParameter(new WeightAllowedParameter(true));
     $cef->addComment(new CommentLine('Here the votes datas:'));
 
-    $cef->addVote(new VoteLine(
+    $cef->addVote(VoteLine::fromRanking(
         ranking: [['Candidate A'], ['Candidate B'], ['Candidate C']],
         quantifier: 42,
     ));
-    $cef->addVote(new VoteLine(
+    $cef->addVote(VoteLine::fromRanking(
         ranking: [['Candidate A'], ['Candidate B'], ['Candidate C']],
         tags: ['julien@condorcet.vote', 'signature:55073db57b0a859911'],
     ));
-    $cef->addVote(new VoteLine(
+    $cef->addVote(VoteLine::fromRanking(
         ranking: [['Candidate C'], ['Candidate A', 'Candidate B']],
         weight: 7,
         quantifier: 8,
@@ -61,7 +61,7 @@ it('uses compact formatting when autoFormat is off', function (): void {
     [$cef, $buffer] = makeStringCef(autoFormat: false);
 
     $cef->addParameter(new CandidatesParameter(['A', 'B']));
-    $cef->addVote(new VoteLine([['A'], ['B']]));
+    $cef->addVote(VoteLine::fromRanking([['A'], ['B']]));
 
     expect($buffer())->toBe("#/Candidates:A;B\nA>B\n");
 });
@@ -70,7 +70,7 @@ it('inserts an automatic blank line between params and votes when autoFormat is 
     [$cef, $buffer] = makeStringCef(autoFormat: true);
 
     $cef->addParameter(new CandidatesParameter(['A', 'B']));
-    $cef->addVote(new VoteLine([['A'], ['B']]));
+    $cef->addVote(VoteLine::fromRanking([['A'], ['B']]));
 
     expect($buffer())->toBe("#/Candidates: A ; B\n\nA > B\n");
 });
@@ -79,7 +79,7 @@ it('does NOT insert an automatic blank line between params and votes when autoFo
     [$cef, $buffer] = makeStringCef(autoFormat: false);
 
     $cef->addParameter(new CandidatesParameter(['A', 'B']));
-    $cef->addVote(new VoteLine([['A'], ['B']]));
+    $cef->addVote(VoteLine::fromRanking([['A'], ['B']]));
 
     expect($buffer())->toBe("#/Candidates:A;B\nA>B\n");
 });
@@ -87,7 +87,7 @@ it('does NOT insert an automatic blank line between params and votes when autoFo
 it('does not insert an auto separator when no parameter was written', function (): void {
     [$cef, $buffer] = makeStringCef(autoFormat: true);
 
-    $cef->addVote(new VoteLine([['A']]));
+    $cef->addVote(VoteLine::fromRanking([['A']]));
 
     expect($buffer())->toBe("A\n");
 });
@@ -96,8 +96,8 @@ it('inserts the auto separator only once even with multiple vote calls', functio
     [$cef, $buffer] = makeStringCef(autoFormat: true);
 
     $cef->addParameter(new CandidatesParameter(['A', 'B']));
-    $cef->addVote(new VoteLine([['A']]));
-    $cef->addVote(new VoteLine([['B']]));
+    $cef->addVote(VoteLine::fromRanking([['A']]));
+    $cef->addVote(VoteLine::fromRanking([['B']]));
 
     expect(substr_count($buffer(), "\n\n"))->toBe(1);
 });
@@ -106,7 +106,7 @@ it('locks parameter writing after the first vote', function (): void {
     [$cef] = makeStringCef();
 
     $cef->addParameter(new CandidatesParameter(['A']));
-    $cef->addVote(new VoteLine([['A']]));
+    $cef->addVote(VoteLine::fromRanking([['A']]));
     $cef->addParameter(new ImplicitRankingParameter(true));
 })->throws(InvalidWriterStateException::class, 'before any vote');
 
@@ -117,7 +117,7 @@ it('allows comments and empty lines on either side of the vote boundary', functi
     $cef->addParameter(new CandidatesParameter(['A']));
     $cef->addComment(new CommentLine('between'));
     $cef->addEmptyLine();
-    $cef->addVote(new VoteLine([['A']]));
+    $cef->addVote(VoteLine::fromRanking([['A']]));
     $cef->addComment(new CommentLine('trailing'));
 
     expect($buffer())->toContain('# preamble');
@@ -128,7 +128,7 @@ it('allows comments and empty lines on either side of the vote boundary', functi
 it('renders a vote with an inline comment', function (): void {
     [$cef, $buffer] = makeStringCef();
 
-    $cef->addVote(new VoteLine([['A']], inlineComment: 'my note'));
+    $cef->addVote(VoteLine::fromRanking([['A']], inlineComment: 'my note'));
 
     expect($buffer())->toBe("A # my note\n");
 });
@@ -136,7 +136,7 @@ it('renders a vote with an inline comment', function (): void {
 it('renders an inline comment compactly when autoFormat is off', function (): void {
     [$cef, $buffer] = makeStringCef(autoFormat: false);
 
-    $cef->addVote(new VoteLine([['A']], inlineComment: 'note'));
+    $cef->addVote(VoteLine::fromRanking([['A']], inlineComment: 'note'));
 
     expect($buffer())->toBe("A#note\n");
 });
@@ -162,7 +162,7 @@ it('returns $this from every add method to support chaining', function (): void 
         ->addParameter(new CandidatesParameter(['A']))
         ->addEmptyLine()
         ->addComment(new CommentLine('x'))
-        ->addVote(new VoteLine([['A']]));
+        ->addVote(VoteLine::fromRanking([['A']]));
 
     expect($result)->toBe($cef);
 });

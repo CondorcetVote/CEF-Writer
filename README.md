@@ -39,16 +39,16 @@ $cef->addParameter(new CandidatesParameter(['Alice', 'Bob', 'Charlie']));
 $cef->addParameter(new ImplicitRankingParameter(true));
 $cef->addParameter(new WeightAllowedParameter(true));
 
-$cef->addVote(new VoteLine(
+$cef->addVote(VoteLine::fromRanking(
     ranking: [['Alice'], ['Bob'], ['Charlie']],
     quantifier: 42,
 ));
-$cef->addVote(new VoteLine(
+$cef->addVote(VoteLine::fromRanking(
     ranking: [['Charlie'], ['Alice', 'Bob']],
     weight: 7,
     quantifier: 8,
 ));
-$cef->addVote(new VoteLine(ranking: [])); // blank ballot (/EMPTY_RANKING/)
+$cef->addVote(VoteLine::fromRanking(ranking: [])); // blank ballot (/EMPTY_RANKING/)
 ```
 
 produces:
@@ -92,7 +92,7 @@ echo $buffer; // "#/Candidates: A ; B\n"
 ```php
 $cef->autoFormat = false;
 $cef->addParameter(new CandidatesParameter(['A', 'B']));
-$cef->addVote(new VoteLine([['A'], ['B']]));
+$cef->addVote(VoteLine::fromRanking([['A'], ['B']]));
 // "#/Candidates:A;B\nA>B\n"
 ```
 
@@ -118,10 +118,13 @@ Parameters can only be added before the first vote — any later call throws
 
 ### Vote lines
 
-The typed way — build a `VoteLine` and pass it to `Cef::addVote()`:
+`VoteLine` instances are built through static named constructors — its
+constructor is `@internal`, so never use `new VoteLine(...)`.
+
+The typed way — `VoteLine::fromRanking()` — then pass it to `Cef::addVote()`:
 
 ```php
-new VoteLine(
+VoteLine::fromRanking(
     ranking:       [['Alice'], ['Bob', 'Charlie']], // [] => /EMPTY_RANKING/
     tags:          ['voter@example.com'],
     weight:        7,
@@ -134,6 +137,10 @@ Each rank is itself a list of tied candidates. An empty top-level ranking
 emits the `/EMPTY_RANKING/` blank-ballot sentinel.
 
 The `ranking` argument also accepts a ready-made `Ranking` object (see below).
+Once built, the parsed ranking is exposed as a `Ranking` on the read-only
+`$voteLine->ranking` property (use `$voteLine->ranking->ranks` for the
+`list<list<string>>` structure). It is `null` only when the ballot was built
+from a verbatim string via `VoteLine::fromRawRankingString()` (see below).
 
 #### The `Ranking` value object
 
@@ -151,13 +158,31 @@ $ranking->format();     // "Alice > Bob = Charlie"   (relaxed flavor)
 $ranking->format(false);// "Alice>Bob=Charlie"       (compact flavor)
 (string) $ranking;      // same as format()
 
-$cef->addVote(new VoteLine(ranking: $ranking, weight: 7));
+$cef->addVote(VoteLine::fromRanking(ranking: $ranking, weight: 7));
 ```
 
 `Ranking` is immutable and self-validating: reserved characters, empty ranks
 and duplicate candidates throw a `CefFormatException` at construction time.
 `Ranking::fromString()` accepts **only** a ranking — every reserved character,
 the `||` tag separator and line breaks are rejected.
+
+#### Verbatim ranking — `VoteLine::fromRawRankingString()`
+
+When you already have a ranking as text and want it written **verbatim** (its
+exact spacing preserved, no re-rendering), build the ballot with
+`fromRawRankingString()`. It validates the ranking string with the same rules
+as `Ranking::fromString()` but skips parsing it into a `Ranking` — the string
+is stored as-is and `$voteLine->ranking` is therefore `null`:
+
+```php
+$line = VoteLine::fromRawRankingString('Alice>Bob=Charlie', weight: 7);
+$line->format(true);  // "Alice>Bob=Charlie ^7"  (ranking kept verbatim)
+$line->ranking;       // null
+```
+
+Only the library-built companions (the `||` tag separator, `^weight`,
+`*quantifier`) follow `autoFormat`; the ranking itself is never reformatted.
+This is the engine behind `Cef::addRawVote()`.
 
 #### From a raw string — `VoteLine::fromString()`
 

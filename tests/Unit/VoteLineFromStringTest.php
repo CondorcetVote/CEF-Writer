@@ -8,7 +8,7 @@ use CondorcetVote\CefWriter\VoteLine;
 it('parses a simple ranking', function (): void {
     $line = VoteLine::fromString('A > B > C');
 
-    expect($line->ranking)->toBe([['A'], ['B'], ['C']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B'], ['C']]);
     expect($line->tags)->toBe([]);
     expect($line->weight)->toBeNull();
     expect($line->quantifier)->toBeNull();
@@ -18,38 +18,38 @@ it('parses a simple ranking', function (): void {
 it('parses a compact ranking (no spaces)', function (): void {
     $line = VoteLine::fromString('A>B>C');
 
-    expect($line->ranking)->toBe([['A'], ['B'], ['C']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B'], ['C']]);
 });
 
 it('parses ties with the equality separator', function (): void {
     $line = VoteLine::fromString('A > B = C > D');
 
-    expect($line->ranking)->toBe([['A'], ['B', 'C'], ['D']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B', 'C'], ['D']]);
 });
 
 it('parses several candidates tied at a single rank', function (): void {
     $line = VoteLine::fromString('Alice = Bob = Charlie');
 
-    expect($line->ranking)->toBe([['Alice', 'Bob', 'Charlie']]);
+    expect($line->ranking->ranks)->toBe([['Alice', 'Bob', 'Charlie']]);
 });
 
 it('parses ties in compact form (no spaces around =)', function (): void {
     $line = VoteLine::fromString('A>B=C=D>E');
 
-    expect($line->ranking)->toBe([['A'], ['B', 'C', 'D'], ['E']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B', 'C', 'D'], ['E']]);
 });
 
 it('preserves the order of tied candidates inside a rank', function (): void {
     $line = VoteLine::fromString('Zulu = Alpha = Mike');
 
-    expect($line->ranking)->toBe([['Zulu', 'Alpha', 'Mike']]);
+    expect($line->ranking->ranks)->toBe([['Zulu', 'Alpha', 'Mike']]);
 });
 
 it('parses ties together with weight, quantifier and tags', function (): void {
     $line = VoteLine::fromString('tag1, tag2 || Alice = Bob > Charlie = Dave ^7 * 8');
 
     expect($line->tags)->toBe(['tag1', 'tag2']);
-    expect($line->ranking)->toBe([['Alice', 'Bob'], ['Charlie', 'Dave']]);
+    expect($line->ranking->ranks)->toBe([['Alice', 'Bob'], ['Charlie', 'Dave']]);
     expect($line->weight)->toBe(7);
     expect($line->quantifier)->toBe(8);
 });
@@ -65,19 +65,19 @@ it('rejects a duplicate within the same tied group', function (): void {
 it('parses candidate names that contain spaces', function (): void {
     $line = VoteLine::fromString('Candidate A > Candidate B = Candidate C');
 
-    expect($line->ranking)->toBe([['Candidate A'], ['Candidate B', 'Candidate C']]);
+    expect($line->ranking->ranks)->toBe([['Candidate A'], ['Candidate B', 'Candidate C']]);
 });
 
 it('parses UTF-8 candidate names', function (): void {
     $line = VoteLine::fromString('Élise > 日本語 > Müller');
 
-    expect($line->ranking)->toBe([['Élise'], ['日本語'], ['Müller']]);
+    expect($line->ranking->ranks)->toBe([['Élise'], ['日本語'], ['Müller']]);
 });
 
 it('parses a trailing quantifier', function (): void {
     $line = VoteLine::fromString('A > B * 42');
 
-    expect($line->ranking)->toBe([['A'], ['B']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B']]);
     expect($line->quantifier)->toBe(42);
     expect($line->weight)->toBeNull();
 });
@@ -85,14 +85,14 @@ it('parses a trailing quantifier', function (): void {
 it('parses a trailing quantifier in compact form', function (): void {
     $line = VoteLine::fromString('A>B*42');
 
-    expect($line->ranking)->toBe([['A'], ['B']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B']]);
     expect($line->quantifier)->toBe(42);
 });
 
 it('parses a trailing weight', function (): void {
     $line = VoteLine::fromString('A > B ^7');
 
-    expect($line->ranking)->toBe([['A'], ['B']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B']]);
     expect($line->weight)->toBe(7);
     expect($line->quantifier)->toBeNull();
 });
@@ -115,14 +115,14 @@ it('parses tags before the ranking', function (): void {
     $line = VoteLine::fromString('julien@example.com, signature:abc || A > B');
 
     expect($line->tags)->toBe(['julien@example.com', 'signature:abc']);
-    expect($line->ranking)->toBe([['A'], ['B']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B']]);
 });
 
 it('parses tags + ranking + weight + quantifier together', function (): void {
     $line = VoteLine::fromString('tag1, tag2 || A > B ^3 * 5');
 
     expect($line->tags)->toBe(['tag1', 'tag2']);
-    expect($line->ranking)->toBe([['A'], ['B']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B']]);
     expect($line->weight)->toBe(3);
     expect($line->quantifier)->toBe(5);
 });
@@ -130,7 +130,7 @@ it('parses tags + ranking + weight + quantifier together', function (): void {
 it('parses an inline comment', function (): void {
     $line = VoteLine::fromString('A > B # my note');
 
-    expect($line->ranking)->toBe([['A'], ['B']]);
+    expect($line->ranking->ranks)->toBe([['A'], ['B']]);
     expect($line->inlineComment)->toBe('my note');
 });
 
@@ -145,20 +145,20 @@ it('keeps the inline comment after weight and quantifier', function (): void {
 it('parses the EMPTY_RANKING sentinel', function (): void {
     $line = VoteLine::fromString('/EMPTY_RANKING/');
 
-    expect($line->ranking)->toBe([]);
+    expect($line->ranking->ranks)->toBe([]);
 });
 
 it('parses an EMPTY_RANKING with a quantifier', function (): void {
     $line = VoteLine::fromString('/EMPTY_RANKING/ * 2');
 
-    expect($line->ranking)->toBe([]);
+    expect($line->ranking->ranks)->toBe([]);
     expect($line->quantifier)->toBe(2);
 });
 
 it('parses a single-candidate vote', function (): void {
     $line = VoteLine::fromString('Alice');
 
-    expect($line->ranking)->toBe([['Alice']]);
+    expect($line->ranking->ranks)->toBe([['Alice']]);
 });
 
 it('round-trips the spec example "Candidate C > Candidate A = Candidate B ^7 * 8"', function (): void {

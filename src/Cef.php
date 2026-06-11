@@ -220,7 +220,7 @@ final class Cef
      */
     public function addRawVote(string $vote, ?int $quantifier = null, ?int $weight = null, ?array $tags = null): self
     {
-        $voteLine = VoteLine::fromRankingString(
+        $voteLine = VoteLine::fromRawRankingString(
             $vote,
             tags: $tags ?? [],
             weight: $weight,
@@ -228,7 +228,7 @@ final class Cef
         );
 
         $this->writeAutoSeparatorIfNeeded();
-        $this->writeLine($voteLine->formatWithRawRanking(trim($vote), $this->autoFormat));
+        $this->writeLine($voteLine->format($this->autoFormat));
         $this->voteEmitted = true;
 
         return $this;

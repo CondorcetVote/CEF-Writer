@@ -11,7 +11,7 @@ it('writes to a path provided as a string', function (): void {
     $cef = new Cef(file: $path);
     $cef->autoFormat = false;
     $cef->addParameter(new CandidatesParameter(['A', 'B']));
-    $cef->addVote(new VoteLine([['A'], ['B']]));
+    $cef->addVote(VoteLine::fromRanking([['A'], ['B']]));
 
     $cef->file?->fflush();
     unset($cef);
@@ -40,7 +40,7 @@ it('writes to an already-open SplFileObject', function (): void {
     $cef = new Cef(file: $file);
     $cef->autoFormat = false;
     $cef->addParameter(new CandidatesParameter(['Alice', 'Bob']));
-    $cef->addVote(new VoteLine([['Alice']]));
+    $cef->addVote(VoteLine::fromRanking([['Alice']]));
 
     $file->fflush();
     unset($cef, $file);

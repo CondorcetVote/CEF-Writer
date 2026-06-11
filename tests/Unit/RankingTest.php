@@ -103,8 +103,34 @@ it('rejects a weight smuggled inside a ranking string', function (): void {
 
 it('can be passed straight to a VoteLine', function (): void {
     $ranking = new Ranking([['Alice'], ['Bob', 'Charlie']]);
-    $line = new VoteLine(ranking: $ranking, weight: 7);
+    $line = VoteLine::fromRanking(ranking: $ranking, weight: 7);
 
-    expect($line->ranking)->toBe([['Alice'], ['Bob', 'Charlie']]);
+    expect($line->ranking)->toBe($ranking);
     expect($line->format(true))->toBe('Alice > Bob = Charlie ^7');
 });
+
+it('accepts a valid ranking string without allocating', function (): void {
+    Ranking::assertValidString('Alice > Bob = Charlie');
+    Ranking::assertValidString('A>B=C>D');
+    Ranking::assertValidString('/EMPTY_RANKING/');
+})->throwsNoExceptions();
+
+it('rejects an empty ranking string in assertValidString', function (): void {
+    Ranking::assertValidString('   ');
+})->throws(InvalidValueException::class, 'empty');
+
+it('rejects a tag separator in assertValidString', function (): void {
+    Ranking::assertValidString('evil || Alice > Bob');
+})->throws(ReservedCharacterException::class, '||');
+
+it('rejects a reserved character in assertValidString', function (): void {
+    Ranking::assertValidString('Alice > Bob ^7');
+})->throws(ReservedCharacterException::class);
+
+it('rejects a duplicate candidate in assertValidString', function (): void {
+    Ranking::assertValidString('Alice > Bob > Alice');
+})->throws(DuplicateCandidateException::class, 'more than once');
+
+it('rejects an empty candidate in assertValidString', function (): void {
+    Ranking::assertValidString('Alice > > Bob');
+})->throws(InvalidValueException::class);

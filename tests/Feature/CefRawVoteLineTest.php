@@ -134,7 +134,7 @@ it('still allows addVote() with a typed VoteLine after a raw vote line', functio
     [$cef, $buffer] = makeStringCef();
 
     $cef->addRawVoteLine('Alice > Bob');
-    $cef->addVote(new VoteLine([['Charlie']]));
+    $cef->addVote(VoteLine::fromRanking([['Charlie']]));
 
     expect($buffer())->toBe("Alice > Bob\nCharlie\n");
 });

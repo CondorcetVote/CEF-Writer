@@ -49,6 +49,48 @@ final class Ranking
      */
     public static function fromString(string $ranking): self
     {
+        return new self(self::split(self::normalizeString($ranking)));
+    }
+
+    /**
+     * Validate a ranking-only string without allocating a {@see Ranking}.
+     *
+     * Runs the exact same checks as {@see fromString()} (empty input, `||`
+     * tag separator, reserved characters, line breaks, duplicate candidates)
+     * but never materialises the parsed `list<list<string>>` structure nor a
+     * `Ranking` instance — useful for hot paths that write the ranking string
+     * verbatim after a strict format check.
+     *
+     * @param string $ranking Ranking only, e.g. `"A > B = C"` or `"/EMPTY_RANKING/"`.
+     *
+     * @throws CefFormatException
+     */
+    public static function assertValidString(string $ranking): void
+    {
+        $work = self::normalizeString($ranking);
+
+        if ($work === CefFormat::EMPTY_RANKING) {
+            return;
+        }
+
+        $seen = [];
+
+        foreach (explode('>', $work) as $rankString) {
+            foreach (explode('=', $rankString) as $candidate) {
+                self::assertCandidate($candidate, $seen);
+            }
+        }
+    }
+
+    /**
+     * Trim a ranking-only string and reject the two patterns that the
+     * per-candidate validation cannot catch on its own: an empty input and the
+     * `||` tag separator. Returns the trimmed work string.
+     *
+     * @throws CefFormatException
+     */
+    private static function normalizeString(string $ranking): string
+    {
         $work = trim($ranking);
 
         if ($work === '') {
@@ -60,10 +102,10 @@ final class Ranking
         // The "||" tag separator is the only forbidden pattern that
         // per-candidate validation would not catch on its own ("|" is not a
         // reserved character), so reject it explicitly here. Every reserved
-        // character and line break is rejected later by validate().
+        // character and line break is rejected later, candidate by candidate.
         CefFormat::assertNoTagSeparator($work, 'Ranking');
 
-        return new self(self::split($work));
+        return $work;
     }
 
     /**
@@ -149,23 +191,38 @@ final class Ranking
             $cleanedRank = [];
 
             foreach ($rank as $candidate) {
-                $trimmed = trim($candidate);
-                CefFormat::assertValueIsClean($trimmed, 'Ranked candidate');
-
-                if (isset($seen[$trimmed])) {
-                    throw new DuplicateCandidateException(\sprintf(
-                        'Candidate "%s" appears more than once in the ranking.',
-                        $trimmed,
-                    ));
-                }
-
-                $seen[$trimmed] = true;
-                $cleanedRank[] = $trimmed;
+                $cleanedRank[] = self::assertCandidate($candidate, $seen);
             }
 
             $cleaned[] = $cleanedRank;
         }
 
         return $cleaned;
+    }
+
+    /**
+     * Trim and validate a single candidate name, rejecting reserved
+     * characters, line breaks, invalid UTF-8 and duplicates. The `$seen` map
+     * is updated by reference to detect repeats across the whole ranking.
+     *
+     * @param array<string, true> $seen
+     *
+     * @throws CefFormatException
+     */
+    private static function assertCandidate(string $candidate, array &$seen): string
+    {
+        $trimmed = trim($candidate);
+        CefFormat::assertValueIsClean($trimmed, 'Ranked candidate');
+
+        if (isset($seen[$trimmed])) {
+            throw new DuplicateCandidateException(\sprintf(
+                'Candidate "%s" appears more than once in the ranking.',
+                $trimmed,
+            ));
+        }
+
+        $seen[$trimmed] = true;
+
+        return $trimmed;
     }
 }

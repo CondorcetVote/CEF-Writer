@@ -9,9 +9,15 @@ use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidValueException
 /**
  * A single ballot.
  *
- * The ranking is expressed as an ordered list of ranks; each rank is itself a
- * list of candidate names tied at that position. An empty top-level ranking
- * (`[]`) emits the `/EMPTY_RANKING/` blank-ballot sentinel.
+ * Instances are never built with `new`: use one of the static named
+ * constructors — {@see fromRanking()} (typed ranks or a {@see Ranking}),
+ * {@see fromString()} (a full CEF vote-line string), or
+ * {@see fromRawRankingString()} (a pre-validated *verbatim* ranking string).
+ *
+ * The ranking is held as a {@see Ranking} value object on {@see $ranking}. An
+ * empty ranking renders as the `/EMPTY_RANKING/` blank-ballot sentinel. In the
+ * verbatim mode the ranking string is written untouched and is *not* parsed,
+ * so {@see $ranking} is `null`.
  *
  * Optional companions:
  *   - `tags`        — alphanumeric labels separated by `,`, appended before `||`;
@@ -23,10 +29,19 @@ use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidValueException
  */
 final class VoteLine
 {
-    /** @var list<list<string>> */
-    public readonly array $ranking;
+    /**
+     * The parsed ranking, or `null` when the ballot was built from a verbatim
+     * ranking string via {@see fromRawRankingString()} — in that mode the
+     * ranking is deliberately *not* parsed into a {@see Ranking} structure.
+     */
+    public readonly ?Ranking $ranking;
 
-    private readonly Ranking $rankingObject;
+    /**
+     * Verbatim, pre-validated ranking string written to the output untouched.
+     * Set only in the {@see fromRawRankingString()} mode; `null` otherwise
+     * (when {@see $ranking} carries the parsed structure instead).
+     */
+    private readonly ?string $rawRanking;
 
     /** @var list<string> */
     public readonly array $tags;
@@ -38,34 +53,46 @@ final class VoteLine
     public readonly ?string $inlineComment;
 
     /**
-     * @param list<list<string>>|Ranking $ranking      Ordered ranks (each inner list is non-empty;
-     *                                                 pass `[]` for the `/EMPTY_RANKING/` blank ballot),
-     *                                                 or a ready-made {@see Ranking}.
-     * @param list<string>               $tags         Optional tags written before `||`.
-     * @param int|null                   $weight       Strictly positive weight, or `null`.
-     * @param int|null                   $quantifier   Strictly positive quantifier, or `null`.
-     * @param string|null                $inlineComment Single-line trailing comment, or `null`.
+     * @internal Use a static named constructor instead: {@see fromRanking()},
+     *           {@see fromString()} or {@see fromRawRankingString()}.
+     *
+     * @param Ranking|string $ranking       When `$verbatim` is `false`, the parsed
+     *                                       {@see Ranking} to render. When `$verbatim`
+     *                                       is `true`, a ranking-only string written
+     *                                       *verbatim* (validated but not parsed).
+     * @param bool           $verbatim       `true` to keep `$ranking` (a string)
+     *                                       untouched, `false` to render a {@see Ranking}.
+     * @param list<string>   $tags           Optional tags written before `||`.
+     * @param int|null       $weight         Strictly positive weight, or `null`.
+     * @param int|null       $quantifier     Strictly positive quantifier, or `null`.
+     * @param string|null    $inlineComment  Single-line trailing comment, or `null`.
      *
      * @throws CefFormatException on any specification violation
      */
     public function __construct(
-        array|Ranking $ranking,
+        Ranking|string $ranking,
+        bool $verbatim,
         array $tags = [],
         ?int $weight = null,
         ?int $quantifier = null,
         ?string $inlineComment = null,
     ) {
-        $this->rankingObject = $ranking instanceof Ranking ? $ranking : new Ranking($ranking);
-        $this->ranking = $this->rankingObject->ranks;
+        if ($verbatim) {
+            // Verbatim mode: validate the ranking string but skip parsing it
+            // into a Ranking — it is written as-is by format().
+            \assert(\is_string($ranking));
+            Ranking::assertValidString($ranking);
+            $this->ranking = null;
+            $this->rawRanking = trim($ranking);
+        } else {
+            \assert($ranking instanceof Ranking);
+            $this->ranking = $ranking;
+            $this->rawRanking = null;
+        }
+
         $this->tags = self::validateTags($tags);
 
-        if ($weight !== null && $weight < 1) {
-            throw new InvalidValueException('Weight must be a positive integer.');
-        }
-
-        if ($quantifier !== null && $quantifier < 1) {
-            throw new InvalidValueException('Quantifier must be a positive integer.');
-        }
+        self::assertCompanions($weight, $quantifier);
 
         if ($inlineComment !== null) {
             CefFormat::assertSingleLine($inlineComment, 'Inline comment');
@@ -74,6 +101,39 @@ final class VoteLine
         $this->weight = $weight;
         $this->quantifier = $quantifier;
         $this->inlineComment = $inlineComment;
+    }
+
+    /**
+     * Build a {@see VoteLine} from typed ranks or a ready-made {@see Ranking}.
+     *
+     * This is the primary, typed constructor. The `$ranking` argument is
+     * either an ordered list of ranks (each inner list a non-empty group of
+     * tied candidates; pass `[]` for the `/EMPTY_RANKING/` blank ballot) or a
+     * {@see Ranking} value object.
+     *
+     * @param list<list<string>>|Ranking $ranking       Ordered ranks, or a {@see Ranking}.
+     * @param list<string>               $tags           Optional tags written before `||`.
+     * @param int|null                   $weight         Strictly positive weight, or `null`.
+     * @param int|null                   $quantifier     Strictly positive quantifier, or `null`.
+     * @param string|null                $inlineComment  Single-line trailing comment, or `null`.
+     *
+     * @throws CefFormatException on any specification violation
+     */
+    public static function fromRanking(
+        array|Ranking $ranking,
+        array $tags = [],
+        ?int $weight = null,
+        ?int $quantifier = null,
+        ?string $inlineComment = null,
+    ): self {
+        return new self(
+            ranking: $ranking instanceof Ranking ? $ranking : new Ranking($ranking),
+            verbatim: false,
+            tags: $tags,
+            weight: $weight,
+            quantifier: $quantifier,
+            inlineComment: $inlineComment,
+        );
     }
 
     /**
@@ -100,6 +160,7 @@ final class VoteLine
 
         return new self(
             ranking: $parts['ranking'],
+            verbatim: false,
             tags: $parts['tags'],
             weight: $parts['weight'],
             quantifier: $parts['quantifier'],
@@ -124,16 +185,18 @@ final class VoteLine
     }
 
     /**
-     * Build a {@see VoteLine} from a ranking-only string plus strictly-typed
-     * companions.
+     * Build a {@see VoteLine} from a ranking-only string, kept *verbatim*.
      *
-     * Unlike {@see fromString()}, the `$ranking` argument is parsed as a
-     * ranking and *nothing else*: it may contain candidate names joined by the
-     * `>` (rank) and `=` (tie) operators, or the `/EMPTY_RANKING/` sentinel.
-     * Any reserved character (`^`, `*`, `#`, `;`, `,`, `/`), the `||` tag
-     * separator, or a line break is rejected — there is no way to smuggle a
-     * weight, quantifier, tag or inline comment through the string. Those must
-     * be supplied through the dedicated, typed arguments.
+     * The special, allocation-light sibling of {@see fromRanking()}: the
+     * ranking string is validated as a ranking and *nothing else* — any
+     * reserved character (`^`, `*`, `#`, `;`, `,`, `/`), the `||`
+     * tag separator, or a line break is rejected, so it cannot smuggle a
+     * weight, quantifier, tag or inline comment — but it is **not** parsed into
+     * a {@see Ranking}. The string is stored as-is and written untouched by
+     * {@see format()} (only the library-built companions — the `||` separator,
+     * `^weight`, `*quantifier` — follow `$autoFormat`). The resulting
+     * instance therefore has a `null` {@see $ranking}. Used by
+     * {@see Cef::addRawVote()}.
      *
      * @param string       $ranking    Ranking only, e.g. `"A > B = C"` or `"/EMPTY_RANKING/"`.
      * @param list<string> $tags       Optional tags written before `||`.
@@ -142,14 +205,15 @@ final class VoteLine
      *
      * @throws CefFormatException
      */
-    public static function fromRankingString(
+    public static function fromRawRankingString(
         string $ranking,
         array $tags = [],
         ?int $weight = null,
         ?int $quantifier = null,
     ): self {
         return new self(
-            ranking: Ranking::fromString($ranking),
+            ranking: $ranking,
+            verbatim: true,
             tags: $tags,
             weight: $weight,
             quantifier: $quantifier,
@@ -262,30 +326,45 @@ final class VoteLine
      */
     public function format(bool $autoFormat = true): string
     {
-        return $this->assemble($this->rankingObject->format($autoFormat), $autoFormat);
+        return $this->assembleLine($this->renderRanking($autoFormat), $autoFormat);
     }
 
     /**
-     * Render the ballot reusing a caller-supplied, already-validated ranking
-     * string *verbatim* instead of re-rendering the parsed ranking.
-     *
-     * Used by {@see Cef::addRawVote()} so that the raw ranking the caller
-     * passed is emitted untouched (its original spacing is preserved, exactly
-     * like {@see Cef::addRawVoteLine()}), while the typed companions (tags,
-     * weight, quantifier) are still laid out according to `$autoFormat`.
-     *
-     * @internal
+     * Return the ranking part of the line: the verbatim string in raw mode, or
+     * the parsed ranking rendered with `$autoFormat` otherwise.
      */
-    public function formatWithRawRanking(string $rawRanking, bool $autoFormat = true): string
+    private function renderRanking(bool $autoFormat): string
     {
-        return $this->assemble($rawRanking, $autoFormat);
+        if ($this->rawRanking !== null) {
+            return $this->rawRanking;
+        }
+
+        \assert($this->ranking !== null);
+
+        return $this->ranking->format($autoFormat);
+    }
+
+    /**
+     * Reject a non-null, non-positive weight or quantifier.
+     *
+     * @throws CefFormatException
+     */
+    private static function assertCompanions(?int $weight, ?int $quantifier): void
+    {
+        if ($weight !== null && $weight < 1) {
+            throw new InvalidValueException('Weight must be a positive integer.');
+        }
+
+        if ($quantifier !== null && $quantifier < 1) {
+            throw new InvalidValueException('Quantifier must be a positive integer.');
+        }
     }
 
     /**
      * Wrap a ranking string with the tag prefix and the weight / quantifier
      * suffix, using the spacing flavor selected by `$autoFormat`.
      */
-    private function assemble(string $ranking, bool $autoFormat): string
+    private function assembleLine(string $ranking, bool $autoFormat): string
     {
         $line = '';
 

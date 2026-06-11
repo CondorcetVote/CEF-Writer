@@ -16,7 +16,7 @@ it('preserves UTF-8 in candidate names through Cef writing', function (): void {
     [$cef, $buffer] = makeStringCef();
 
     $cef->addParameter(new CandidatesParameter(['Élise', '日本語', 'Müller', '🗳']));
-    $cef->addVote(new VoteLine([['Élise'], ['日本語', 'Müller'], ['🗳']]));
+    $cef->addVote(VoteLine::fromRanking([['Élise'], ['日本語', 'Müller'], ['🗳']]));
 
     expect($buffer())->toContain('Élise ; 日本語 ; Müller ; 🗳');
     expect($buffer())->toContain('Élise > 日本語 = Müller > 🗳');
@@ -25,7 +25,7 @@ it('preserves UTF-8 in candidate names through Cef writing', function (): void {
 it('preserves UTF-8 in tags', function (): void {
     [$cef, $buffer] = makeStringCef();
 
-    $cef->addVote(new VoteLine(
+    $cef->addVote(VoteLine::fromRanking(
         ranking: [['Alice']],
         tags: ['électeur:café', '東京'],
     ));
@@ -36,7 +36,7 @@ it('preserves UTF-8 in tags', function (): void {
 it('preserves UTF-8 in inline comments', function (): void {
     [$cef, $buffer] = makeStringCef();
 
-    $cef->addVote(new VoteLine(
+    $cef->addVote(VoteLine::fromRanking(
         ranking: [['Alice']],
         inlineComment: 'noté en café — ☕',
     ));
@@ -64,7 +64,7 @@ it('round-trips UTF-8 through VoteLine::fromString()', function (): void {
     $line = VoteLine::fromString('électeur:café || Élise > 日本語 = 🗳 ^7 * 8 # café noté');
 
     expect($line->tags)->toBe(['électeur:café']);
-    expect($line->ranking)->toBe([['Élise'], ['日本語', '🗳']]);
+    expect($line->ranking->ranks)->toBe([['Élise'], ['日本語', '🗳']]);
     expect($line->weight)->toBe(7);
     expect($line->quantifier)->toBe(8);
     expect($line->inlineComment)->toBe('café noté');

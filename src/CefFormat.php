@@ -86,6 +86,26 @@ final class CefFormat
     }
 
     /**
+     * Reject any value that contains the `||` tag separator.
+     *
+     * The separator is the only forbidden pattern that per-character
+     * validation cannot catch on its own, because `|` is not itself a reserved
+     * character. Both ranking strings and tag values rely on this check.
+     *
+     * @throws CefFormatException
+     */
+    public static function assertNoTagSeparator(string $value, string $context): void
+    {
+        if (str_contains($value, self::TAGS_SEPARATOR)) {
+            throw new ReservedCharacterException(\sprintf(
+                '%s cannot contain the "%s" tag separator.',
+                $context,
+                self::TAGS_SEPARATOR,
+            ));
+        }
+    }
+
+    /**
      * Verify that `$value` is valid UTF-8, single-line, and contains no null
      * byte. Shared base for every value-bound assertion above.
      *

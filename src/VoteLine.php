@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CondorcetVote\CefWriter;
 
-use CondorcetVote\CefWriter\Exception\{CefFormatException, DuplicateCandidateException, InvalidValueException, InvalidWriterStateException, ReservedCharacterException};
+use CondorcetVote\CefWriter\Exception\{CefFormatException, InvalidValueException, InvalidWriterStateException};
 
 /**
  * A single ballot.
@@ -26,6 +26,8 @@ final class VoteLine
     /** @var list<list<string>> */
     public readonly array $ranking;
 
+    private readonly Ranking $rankingObject;
+
     /** @var list<string> */
     public readonly array $tags;
 
@@ -36,23 +38,25 @@ final class VoteLine
     public readonly ?string $inlineComment;
 
     /**
-     * @param list<list<string>> $ranking      Ordered ranks; each inner list is non-empty.
-     *                                         Pass `[]` for the `/EMPTY_RANKING/` blank ballot.
-     * @param list<string>       $tags         Optional tags written before `||`.
-     * @param int|null           $weight       Strictly positive weight, or `null`.
-     * @param int|null           $quantifier   Strictly positive quantifier, or `null`.
-     * @param string|null        $inlineComment Single-line trailing comment, or `null`.
+     * @param list<list<string>>|Ranking $ranking      Ordered ranks (each inner list is non-empty;
+     *                                                 pass `[]` for the `/EMPTY_RANKING/` blank ballot),
+     *                                                 or a ready-made {@see Ranking}.
+     * @param list<string>               $tags         Optional tags written before `||`.
+     * @param int|null                   $weight       Strictly positive weight, or `null`.
+     * @param int|null                   $quantifier   Strictly positive quantifier, or `null`.
+     * @param string|null                $inlineComment Single-line trailing comment, or `null`.
      *
      * @throws CefFormatException on any specification violation
      */
     public function __construct(
-        array $ranking,
+        array|Ranking $ranking,
         array $tags = [],
         ?int $weight = null,
         ?int $quantifier = null,
         ?string $inlineComment = null,
     ) {
-        $this->ranking = self::validateRanking($ranking);
+        $this->rankingObject = $ranking instanceof Ranking ? $ranking : new Ranking($ranking);
+        $this->ranking = $this->rankingObject->ranks;
         $this->tags = self::validateTags($tags);
 
         if ($weight !== null && $weight < 1) {
@@ -144,26 +148,8 @@ final class VoteLine
         ?int $weight = null,
         ?int $quantifier = null,
     ): self {
-        $work = trim($ranking);
-
-        if ($work === '') {
-            throw new InvalidValueException(
-                'Vote ranking string cannot be empty; use "/EMPTY_RANKING/" for a blank ballot.',
-            );
-        }
-
-        // The "||" tag separator is the only forbidden pattern that
-        // per-candidate validation would not catch on its own ("|" is not a
-        // reserved character), so reject it explicitly here. Every reserved
-        // character and line break is rejected later by validateRanking().
-        if (str_contains($work, CefFormat::TAGS_SEPARATOR)) {
-            throw new ReservedCharacterException(
-                'Vote ranking cannot contain the "||" tag separator; pass tags through the $tags argument.',
-            );
-        }
-
         return new self(
-            ranking: self::splitRanking($work),
+            ranking: Ranking::fromString($ranking),
             tags: $tags,
             weight: $weight,
             quantifier: $quantifier,
@@ -183,7 +169,7 @@ final class VoteLine
      * @throws CefFormatException
      *
      * @return array{
-     *     ranking: list<list<string>>,
+     *     ranking: Ranking,
      *     tags: list<string>,
      *     weight: ?int,
      *     quantifier: ?int,
@@ -261,10 +247,8 @@ final class VoteLine
             ));
         }
 
-        $rawRanking = self::splitRanking($work);
-
         return [
-            'ranking' => self::validateRanking($rawRanking),
+            'ranking' => Ranking::fromString($work),
             'tags' => self::validateTags($rawTags),
             'weight' => $weight,
             'quantifier' => $quantifier,
@@ -278,7 +262,7 @@ final class VoteLine
      */
     public function format(bool $autoFormat = true): string
     {
-        return $this->assemble($this->formatRanking($autoFormat), $autoFormat);
+        return $this->assemble($this->rankingObject->format($autoFormat), $autoFormat);
     }
 
     /**
@@ -324,92 +308,6 @@ final class VoteLine
         return $line;
     }
 
-    private function formatRanking(bool $autoFormat = true): string
-    {
-        if (\count($this->ranking) === 0) {
-            return CefFormat::EMPTY_RANKING;
-        }
-
-        $rankSep = $autoFormat ? ' > ' : '>';
-        $tieSep = $autoFormat ? ' = ' : '=';
-
-        $ranks = array_map(
-            static fn(array $rank): string => implode($tieSep, $rank),
-            $this->ranking,
-        );
-
-        return implode($rankSep, $ranks);
-    }
-
-    /**
-     * Split a cleaned ranking string into its raw, *un-validated* rank/tie
-     * structure. The `/EMPTY_RANKING/` sentinel maps to an empty list. Ranks
-     * are separated by `>`, tied candidates within a rank by `=`; every token
-     * is trimmed but not otherwise checked here.
-     *
-     * @return list<list<string>>
-     */
-    private static function splitRanking(string $work): array
-    {
-        if ($work === CefFormat::EMPTY_RANKING) {
-            return [];
-        }
-
-        $rawRanking = [];
-
-        foreach (explode('>', $work) as $rankString) {
-            $rank = [];
-
-            foreach (explode('=', $rankString) as $candidate) {
-                $rank[] = trim($candidate);
-            }
-
-            $rawRanking[] = $rank;
-        }
-
-        return $rawRanking;
-    }
-
-    /**
-     * @param list<list<string>> $ranking
-     *
-     * @throws CefFormatException
-     *
-     * @return list<list<string>>
-     */
-    private static function validateRanking(array $ranking): array
-    {
-        $cleaned = [];
-        $seen = [];
-
-        foreach ($ranking as $rankIndex => $rank) {
-            if (\count($rank) === 0) {
-                throw new InvalidValueException(\sprintf('Rank #%d is empty.', $rankIndex + 1));
-            }
-
-            $cleanedRank = [];
-
-            foreach ($rank as $candidate) {
-                $trimmed = trim($candidate);
-                CefFormat::assertValueIsClean($trimmed, 'Ranked candidate');
-
-                if (isset($seen[$trimmed])) {
-                    throw new DuplicateCandidateException(\sprintf(
-                        'Candidate "%s" appears more than once in the ranking.',
-                        $trimmed,
-                    ));
-                }
-
-                $seen[$trimmed] = true;
-                $cleanedRank[] = $trimmed;
-            }
-
-            $cleaned[] = $cleanedRank;
-        }
-
-        return $cleaned;
-    }
-
     /**
      * @param list<string> $tags
      *
@@ -428,10 +326,7 @@ final class VoteLine
                 throw new InvalidValueException('Tag cannot be empty.');
             }
 
-            if (str_contains($trimmed, CefFormat::TAGS_SEPARATOR)) {
-                throw new ReservedCharacterException('Tag cannot contain the "||" separator.');
-            }
-
+            CefFormat::assertNoTagSeparator($trimmed, 'Tag');
             CefFormat::assertValueIsClean($trimmed, 'Tag');
             $cleaned[] = $trimmed;
         }

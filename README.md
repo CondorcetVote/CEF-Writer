@@ -133,6 +133,32 @@ new VoteLine(
 Each rank is itself a list of tied candidates. An empty top-level ranking
 emits the `/EMPTY_RANKING/` blank-ballot sentinel.
 
+The `ranking` argument also accepts a ready-made `Ranking` object (see below).
+
+#### The `Ranking` value object
+
+A ranking can be built, validated and rendered on its own through the
+`Ranking` class — the same abstraction `VoteLine` uses internally:
+
+```php
+use CondorcetVote\CefWriter\Ranking;
+
+$ranking = new Ranking([['Alice'], ['Bob', 'Charlie']]); // [] => /EMPTY_RANKING/
+$ranking = Ranking::fromString('Alice > Bob = Charlie'); // or parse a ranking-only string
+
+$ranking->ranks;        // [['Alice'], ['Bob', 'Charlie']]
+$ranking->format();     // "Alice > Bob = Charlie"   (relaxed flavor)
+$ranking->format(false);// "Alice>Bob=Charlie"       (compact flavor)
+(string) $ranking;      // same as format()
+
+$cef->addVote(new VoteLine(ranking: $ranking, weight: 7));
+```
+
+`Ranking` is immutable and self-validating: reserved characters, empty ranks
+and duplicate candidates throw a `CefFormatException` at construction time.
+`Ranking::fromString()` accepts **only** a ranking — every reserved character,
+the `||` tag separator and line breaks are rejected.
+
 #### From a raw string — `VoteLine::fromString()`
 
 Parse a full CEF vote-line string into a `VoteLine` instance. Every component
